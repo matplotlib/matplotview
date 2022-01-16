@@ -67,5 +67,7 @@ def inset_zoom_axes(axes, bounds, *, image_interpolation="nearest", transform=No
     --------
     See `Axes.inset_axes` method for examples.
     """
-    inset_ax = axes.inset_axes(bounds, transform, zorder, **kwargs)
+    inset_ax = axes.inset_axes(
+        bounds, transform=transform, zorder=zorder, **kwargs
+    )
     return view(inset_ax, axes, image_interpolation)
