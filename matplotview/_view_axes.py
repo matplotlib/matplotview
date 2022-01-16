@@ -5,6 +5,23 @@ from matplotview._transform_renderer import _TransformRenderer
 
 
 def view_wrapper(axes_class):
+    """
+    Construct a ViewAxes, which subclasses, or wraps a specific Axes subclass.
+    A ViewAxes can be configured to display the contents of another Axes
+    within the same Figure.
+
+    Parameters
+    ----------
+    axes_class: Axes
+        An axes type to construct a new ViewAxes wrapper class for.
+
+    Returns
+    -------
+    ViewAxes:
+        The view axes wrapper for a given axes class, capable of display
+        other axes contents...
+    """
+
     @docstring.interpd
     class ViewAxesImpl(axes_class):
         """
@@ -18,8 +35,7 @@ def view_wrapper(axes_class):
         def __init__(
             self,
             axes_to_view,
-            rect,
-            zorder=5,
+            *args,
             image_interpolation="nearest",
             **kwargs
         ):
@@ -29,13 +45,11 @@ def view_wrapper(axes_class):
             Parameters
             ----------
             axes_to_view: `~.axes.Axes`
-                The axes to zoom in on which this axes will be nested inside.
+                The axes to create a view of.
 
-            rect: [left, bottom, width, height]
-                The Axes is built in the rectangle *rect*.
-
-            zorder: int
-                An integer, the z-order of the axes. Defaults to 5.
+            *args
+                Additional arguments to be passed to the Axes class this
+                ViewAxes wraps.
 
             image_interpolation: string
                 Supported options are 'antialiased', 'nearest', 'bilinear',
@@ -46,16 +60,17 @@ def view_wrapper(axes_class):
                 attempting to render a view of an image.
 
             **kwargs
-                Other optional keyword arguments:
+                Other optional keyword arguments supported by the Axes
+                constructor this ViewAxes wraps:
 
                 %(Axes:kwdoc)s
 
             Returns
             -------
-            `~.axes.ZoomViewAxes`
+            ViewAxes
                 The new zoom view axes instance...
             """
-            super().__init__(axes_to_view.figure, rect, zorder=zorder,
+            super().__init__(axes_to_view.figure, *args, zorder=zorder,
                              **kwargs)
             self._init_vars(axes_to_view, image_interpolation)
 
@@ -172,5 +187,6 @@ def view_wrapper(axes_class):
     ViewAxesImpl.__name__ = ViewAxesImpl.__qualname__ = new_name
 
     return ViewAxesImpl
+
 
 ViewAxes = view_wrapper(Axes)
