@@ -35,4 +35,5 @@ setuptools.setup(
     ],
     packages=["matplotview"],
     python_requires=">=3.7",
+    platforms="any"
 )
