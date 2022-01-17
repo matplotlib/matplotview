@@ -19,6 +19,7 @@ setuptools.setup(
     },
     classifiers=[
         'Development Status :: 3 - Alpha',
+        'Framework :: Matplotlib',
         'License :: OSI Approved :: Python Software Foundation License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',

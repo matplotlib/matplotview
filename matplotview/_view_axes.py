@@ -1,10 +1,47 @@
+import itertools
+from typing import Type, List
 from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
 import matplotlib.docstring as docstring
 from matplotview._transform_renderer import _TransformRenderer
+from matplotlib.artist import Artist
+from matplotlib.backend_bases import RendererBase
+
+class BoundRendererArtist:
+    def __init__(self, artist: Artist, renderer: RendererBase, clip_box: Bbox):
+        self._artist = artist
+        self._renderer = renderer
+        self._clip_box = clip_box
+
+    def __getattribute__(self, item):
+        try:
+            return super().__getattribute__(item)
+        except AttributeError:
+            return self._artist.__getattribute__(item)
+
+    def __setattr__(self, key, value):
+        try:
+            super().__setattr__(key, value)
+        except AttributeError:
+            self._artist.__setattr__(key, value)
+
+    def draw(self, renderer: RendererBase):
+        # Disable the artist defined clip box, as the artist might be visible
+        # under the new renderer even if not on screen...
+        clip_box_orig = self._artist.get_clip_box()
+        full_extents = self._artist.get_window_extent(self._renderer)
+        self._artist.set_clip_box(full_extents)
+
+        # Check and see if the passed limiting box and extents of the
+        # artist intersect, if not don't bother drawing this artist.
+        if(Bbox.intersection(full_extents, self._clip_box) is not None):
+            self._artist.draw(self._renderer)
+
+        # Re-enable the clip box...
+        self._artist.set_clip_box(clip_box_orig)
 
 
-def view_wrapper(axes_class):
+def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
     """
     Construct a ViewAxes, which subclasses, or wraps a specific Axes subclass.
     A ViewAxes can be configured to display the contents of another Axes
@@ -30,13 +67,13 @@ def view_wrapper(axes_class):
         """
         __module__ = axes_class.__module__
         # The number of allowed recursions in the draw method
-        MAX_RENDER_DEPTH = 1
+        MAX_RENDER_DEPTH = 5
 
         def __init__(
             self,
-            axes_to_view,
+            axes_to_view: Axes,
             *args,
-            image_interpolation="nearest",
+            image_interpolation: str = "nearest",
             **kwargs
         ):
             """
@@ -70,90 +107,68 @@ def view_wrapper(axes_class):
             ViewAxes
                 The new zoom view axes instance...
             """
-            super().__init__(axes_to_view.figure, *args, zorder=zorder,
-                             **kwargs)
+            super().__init__(axes_to_view.figure, *args, **kwargs)
             self._init_vars(axes_to_view, image_interpolation)
-
 
         def _init_vars(
             self,
-            axes_to_view,
-            image_interpolation="nearest"
+            axes_to_view: Axes,
+            image_interpolation: str = "nearest"
         ):
             self.__view_axes = axes_to_view
             self.__image_interpolation = image_interpolation
             self._render_depth = 0
             self.__scale_lines = True
+            self.__renderer = None
 
-        def draw(self, renderer=None):
+        def get_children(self) -> List[Artist]:
+            # We overload get_children to return artists from the view axes
+            # in addition to this axes when drawing. We wrap the artists
+            # in a BoundRendererArtist, so they are drawn with an alternate
+            # renderer, and therefore to the correct location.
+            if(self.__renderer is not None):
+                mock_renderer = _TransformRenderer(
+                    self.__renderer, self.__view_axes.transData,
+                    self.transData, self, self.__image_interpolation,
+                    self.__scale_lines
+                )
+
+                x1, x2 = self.get_xlim()
+                y1, y2 = self.get_ylim()
+                axes_box = Bbox.from_extents(x1, y1, x2, y2).transformed(
+                    self.__view_axes.transData
+                )
+
+                init_list = super().get_children()
+                init_list.extend([
+                    BoundRendererArtist(a, mock_renderer, axes_box)
+                    for a in itertools.chain(
+                        self.__view_axes._children, self.__view_axes.child_axes
+                    ) if(a is not self)
+                ])
+
+                return init_list
+            else:
+                return super().get_children()
+            
+        def draw(self, renderer: RendererBase = None):
+            # It is possible to have two axes which are views of each other
+            # therefore we track the number of recursions and stop drawing
+            # at a certain depth
             if(self._render_depth >= self.MAX_RENDER_DEPTH):
                 return
             self._render_depth += 1
+            # Set the renderer, causing get_children to return the view's
+            # children also...
+            self.__renderer = renderer
 
             super().draw(renderer)
 
-            if(not self.get_visible()):
-                return
-
-            axes_children = [
-                *self.__view_axes.collections,
-                *self.__view_axes.patches,
-                *self.__view_axes.lines,
-                *self.__view_axes.texts,
-                *self.__view_axes.artists,
-                *self.__view_axes.images,
-                *self.__view_axes.child_axes
-            ]
-
-            # Sort all rendered items by their z-order so they render in layers
-            # correctly...
-            axes_children.sort(key=lambda obj: obj.get_zorder())
-
-            artist_boxes = []
-            # We need to temporarily disable the clip boxes of all of the
-            # artists, in order to allow us to continue rendering them it even
-            # if it is outside of the parent axes (they might still be visible
-            # in this zoom axes).
-            for a in axes_children:
-                artist_boxes.append(a.get_clip_box())
-                a.set_clip_box(a.get_window_extent(renderer))
-
-            # Construct mock renderer and draw all artists to it.
-            mock_renderer = _TransformRenderer(
-                renderer, self.__view_axes.transData, self.transData, self,
-                self.__image_interpolation, self.__scale_lines
-            )
-            x1, x2 = self.get_xlim()
-            y1, y2 = self.get_ylim()
-            axes_box = Bbox.from_extents(x1, y1, x2, y2).transformed(
-                self.__view_axes.transData
-            )
-
-            for artist in axes_children:
-                if(
-                    (artist is not self)
-                    and (
-                        Bbox.intersection(
-                            artist.get_window_extent(renderer), axes_box
-                        ) is not None
-                    )
-                ):
-                    artist.draw(mock_renderer)
-
-            # Reset all of the artist clip boxes...
-            for a, box in zip(axes_children, artist_boxes):
-                a.set_clip_box(box)
-
-            # We need to redraw the splines if enabled, as we have finally
-            # drawn everything... This avoids other objects being drawn over
-            # the splines.
-            if(self.axison and self._frameon):
-                for spine in self.spines.values():
-                    spine.draw(renderer)
-
+            # Get rid of the renderer...
+            self.__renderer = None
             self._render_depth -= 1
 
-        def get_linescaling(self):
+        def get_linescaling(self) -> bool:
             """
             Get if line width scaling is enabled.
 
@@ -164,7 +179,7 @@ def view_wrapper(axes_class):
             """
             return self.__scale_lines
 
-        def set_linescaling(self, value):
+        def set_linescaling(self, value: bool):
             """
             Set whether line widths should be scaled when rendering a view of
             an axes.
@@ -178,7 +193,12 @@ def view_wrapper(axes_class):
             self.__scale_lines = value
 
         @classmethod
-        def from_axes(cls, axes, axes_to_view, image_interpolation="nearest"):
+        def from_axes(
+            cls,
+            axes: Axes,
+            axes_to_view: Axes,
+            image_interpolation: str = "nearest"
+        ):
             axes.__class__ = cls
             axes._init_vars(axes_to_view, image_interpolation)
             return axes
