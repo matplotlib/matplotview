@@ -5,6 +5,13 @@ matplotview provides a simple interface for creating "views" of matplotlib
 axes, providing a simple way of displaying overviews and zoomed views of 
 data without plotting data twice.
 
+## Usage
+
+matplotview provides two methods, `view`, and `inset_zoom_axes`. The `view`
+method accepts two `Axes`, and makes the first axes a view of the second. The
+`inset_zoom_axes` method provides the same functionality as `Axes.inset_axes`,
+but the returned inset axes is configured to be a view of the parent axes.
+
 ## Examples
 
 An example of two axes showing the same plot.
@@ -34,7 +41,7 @@ fig.show()
 ```
 ![First example plot results, two views of the same plot.](_images/example1.png)
 
-An inset zoom example.
+An inset axes example .
 ```python
 from matplotlib import cbook
 import matplotlib.pyplot as plt
