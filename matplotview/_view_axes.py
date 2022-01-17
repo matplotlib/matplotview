@@ -12,7 +12,7 @@ def view_wrapper(axes_class):
 
     Parameters
     ----------
-    axes_class: Axes
+    axes_class: Type[Axes]
         An axes type to construct a new ViewAxes wrapper class for.
 
     Returns
