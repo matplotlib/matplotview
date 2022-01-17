@@ -39,7 +39,7 @@ ax2.set_ylim(ax1.get_ylim())
 fig.tight_layout()
 fig.show()
 ```
-![First example plot results, two views of the same plot.](_images/example1.png)
+![First example plot results, two views of the same plot.](https://user-images.githubusercontent.com/47544550/149814592-dd815f95-c3ef-406d-bd7e-504859c836bf.png)
 
 An inset axes example .
 ```python
@@ -74,6 +74,6 @@ axins.set_yticklabels([])
 
 ax.indicate_inset_zoom(axins, edgecolor="black")
 
-fig.show() 
+fig.show()
 ```
-![Second example plot results, an inset axes showing a zoom view of an image.](_images/example2.png)
+![Second example plot results, an inset axes showing a zoom view of an image.](https://user-images.githubusercontent.com/47544550/149814558-c2b1228d-2e5d-41be-86c0-f5dd01d42884.png)
