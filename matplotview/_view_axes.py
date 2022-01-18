@@ -44,10 +44,6 @@ class BoundRendererArtist:
         self._artist.set_clip_box(clip_box_orig)
 
 
-class SharedRenderDepth:
-    current_depth = 0
-
-
 def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
     """
     Construct a ViewAxes, which subclasses, or wraps a specific Axes subclass.
@@ -146,6 +142,9 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 raise ValueError(f"The filter function must be a callable!")
 
             self.__view_axes = axes_to_view
+            self.figure._current_render_depth = getattr(
+                self.figure, "_current_render_depth", 0
+            )
             self.__image_interpolation = image_interpolation
             self.__max_render_depth = render_depth
             self.__filter_function = filter_function
@@ -186,9 +185,9 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             # It is possible to have two axes which are views of each other
             # therefore we track the number of recursions and stop drawing
             # at a certain depth
-            if(SharedRenderDepth.current_depth >= self.__max_render_depth):
+            if(self.figure._current_render_depth >= self.__max_render_depth):
                 return
-            SharedRenderDepth.current_depth += 1
+            self.figure._current_render_depth += 1
             # Set the renderer, causing get_children to return the view's
             # children also...
             self.__renderer = renderer
@@ -197,7 +196,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
 
             # Get rid of the renderer...
             self.__renderer = None
-            SharedRenderDepth.current_depth -= 1
+            self.figure._current_render_depth -= 1
 
         def get_linescaling(self) -> bool:
             """
