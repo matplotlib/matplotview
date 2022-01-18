@@ -1,11 +1,13 @@
 import itertools
-from typing import Type, List
+from typing import Type, List, Optional, Callable
 from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
 import matplotlib.docstring as docstring
 from matplotview._transform_renderer import _TransformRenderer
 from matplotlib.artist import Artist
 from matplotlib.backend_bases import RendererBase
+
+DEFAULT_RENDER_DEPTH = 10
 
 class BoundRendererArtist:
     def __init__(self, artist: Artist, renderer: RendererBase, clip_box: Bbox):
@@ -66,17 +68,17 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         require Artists to be plotted twice.
         """
         __module__ = axes_class.__module__
-        # The number of allowed recursions in the draw method
-        MAX_RENDER_DEPTH = 5
 
         def __init__(
             self,
             axes_to_view: Axes,
             *args,
             image_interpolation: str = "nearest",
+            render_depth: int = DEFAULT_RENDER_DEPTH,
+            filter_function: Optional[Callable[[Artist], bool]] = None,
             **kwargs
         ):
-            """
+            f"""
             Construct a new view axes.
 
             Parameters
@@ -96,6 +98,17 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 'nearest'. This determines the interpolation used when
                 attempting to render a view of an image.
 
+            render_depth: int, positive, defaults to 10
+                The number of recursive draws allowed for this view, this can
+                happen if the view is a child of the axes (such as an inset
+                axes) or if two views point at each other. Defaults to 10.
+
+            filter_function: callable(Artist) -> bool or None
+                An optional filter function, which can be used to select what
+                artists are drawn by the view. If the function returns True,
+                the element is drawn, otherwise it isn't. Defaults to None,
+                or drawing all artists.
+
             **kwargs
                 Other optional keyword arguments supported by the Axes
                 constructor this ViewAxes wraps:
@@ -108,15 +121,29 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 The new zoom view axes instance...
             """
             super().__init__(axes_to_view.figure, *args, **kwargs)
-            self._init_vars(axes_to_view, image_interpolation)
+            self._init_vars(
+                axes_to_view, image_interpolation,
+                render_depth, filter_function
+            )
 
         def _init_vars(
             self,
             axes_to_view: Axes,
-            image_interpolation: str = "nearest"
+            image_interpolation: str,
+            render_depth: int,
+            filter_function: Optional[Callable[[Artist], bool]]
         ):
+            if(render_depth < 1):
+                raise ValueError(f"Render depth of {render_depth} is invalid.")
+            if(filter_function is None):
+                filter_function = lambda a: True
+            if(not callable(filter_function)):
+                raise ValueError(f"The filter function must be a callable!")
+
             self.__view_axes = axes_to_view
             self.__image_interpolation = image_interpolation
+            self.__max_render_depth = render_depth
+            self.__filter_function = filter_function
             self._render_depth = 0
             self.__scale_lines = True
             self.__renderer = None
@@ -144,7 +171,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                     BoundRendererArtist(a, mock_renderer, axes_box)
                     for a in itertools.chain(
                         self.__view_axes._children, self.__view_axes.child_axes
-                    ) if(a is not self)
+                    ) if(self.__filter_function(a))
                 ])
 
                 return init_list
@@ -155,7 +182,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             # It is possible to have two axes which are views of each other
             # therefore we track the number of recursions and stop drawing
             # at a certain depth
-            if(self._render_depth >= self.MAX_RENDER_DEPTH):
+            if(self._render_depth >= self.__max_render_depth):
                 return
             self._render_depth += 1
             # Set the renderer, causing get_children to return the view's
@@ -197,10 +224,15 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             cls,
             axes: Axes,
             axes_to_view: Axes,
-            image_interpolation: str = "nearest"
-        ):
+            image_interpolation: str = "nearest",
+            render_depth: int = DEFAULT_RENDER_DEPTH,
+            filter_function: Optional[Callable[[Artist], bool]] = None
+        ) -> Axes:
             axes.__class__ = cls
-            axes._init_vars(axes_to_view, image_interpolation)
+            axes._init_vars(
+                axes_to_view, image_interpolation,
+                render_depth, filter_function
+            )
             return axes
 
     new_name = f"{ViewAxesImpl.__name__}[{axes_class.__name__}]"
