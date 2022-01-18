@@ -9,6 +9,7 @@ from matplotlib.backend_bases import RendererBase
 
 DEFAULT_RENDER_DEPTH = 10
 
+
 class BoundRendererArtist:
     def __init__(self, artist: Artist, renderer: RendererBase, clip_box: Bbox):
         self._artist = artist
@@ -41,6 +42,10 @@ class BoundRendererArtist:
 
         # Re-enable the clip box...
         self._artist.set_clip_box(clip_box_orig)
+
+
+class SharedRenderDepth:
+    current_depth = 0
 
 
 def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
@@ -144,7 +149,6 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             self.__image_interpolation = image_interpolation
             self.__max_render_depth = render_depth
             self.__filter_function = filter_function
-            self._render_depth = 0
             self.__scale_lines = True
             self.__renderer = None
 
@@ -182,9 +186,9 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             # It is possible to have two axes which are views of each other
             # therefore we track the number of recursions and stop drawing
             # at a certain depth
-            if(self._render_depth >= self.__max_render_depth):
+            if(SharedRenderDepth.current_depth >= self.__max_render_depth):
                 return
-            self._render_depth += 1
+            SharedRenderDepth.current_depth += 1
             # Set the renderer, causing get_children to return the view's
             # children also...
             self.__renderer = renderer
@@ -193,7 +197,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
 
             # Get rid of the renderer...
             self.__renderer = None
-            self._render_depth -= 1
+            SharedRenderDepth.current_depth -= 1
 
         def get_linescaling(self) -> bool:
             """
