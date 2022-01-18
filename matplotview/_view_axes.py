@@ -142,6 +142,9 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 raise ValueError(f"The filter function must be a callable!")
 
             self.__view_axes = axes_to_view
+            # The current render depth is stored in the figure, so the number
+            # of recursive draws is even in the case of multiple axes drawing
+            # each other in the same figure.
             self.figure._current_render_depth = getattr(
                 self.figure, "_current_render_depth", 0
             )
