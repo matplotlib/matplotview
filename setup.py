@@ -13,9 +13,9 @@ setuptools.setup(
     description="A library for creating lightweight views of matplotlib axes.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/isaacrobinson2000/matplotview",
+    url="https://github.com/matplotlib/matplotview",
     project_urls={
-        "Bug Tracker": "https://github.com/isaacrobinson2000/matplotview/issues",
+        "Bug Tracker": "https://github.com/matplotlib/matplotview/issues",
     },
     classifiers=[
         'Development Status :: 3 - Alpha',
