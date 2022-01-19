@@ -31,10 +31,10 @@ def view(
         'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos',
         or 'none'
 
-    render_depth: int, positive, defaults to 10
+    render_depth: int, positive, defaults to 5
         The number of recursive draws allowed for this view, this can happen
         if the view is a child of the axes (such as an inset axes) or if
-        two views point at each other. Defaults to 10.
+        two views point at each other. Defaults to 5.
 
     filter_function: callable(Artist) -> bool or None
         An optional filter function, which can be used to select what artists
@@ -87,10 +87,10 @@ def inset_zoom_axes(
         determines the interpolation used when attempting to render a
         zoomed version of an image.
 
-    render_depth: int, positive, defaults to 10
+    render_depth: int, positive, defaults to 5
         The number of recursive draws allowed for this view, this can happen
         if the view is a child of the axes (such as an inset axes) or if
-        two views point at each other. Defaults to 10.
+        two views point at each other. Defaults to 5.
 
     filter_function: callable(Artist) -> bool or None
         An optional filter function, which can be used to select what artists

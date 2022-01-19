@@ -7,7 +7,7 @@ from matplotview._transform_renderer import _TransformRenderer
 from matplotlib.artist import Artist
 from matplotlib.backend_bases import RendererBase
 
-DEFAULT_RENDER_DEPTH = 10
+DEFAULT_RENDER_DEPTH = 5
 
 
 class BoundRendererArtist:
