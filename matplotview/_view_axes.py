@@ -9,7 +9,6 @@ from matplotlib.backend_bases import RendererBase
 
 DEFAULT_RENDER_DEPTH = 5
 
-
 class BoundRendererArtist:
     def __init__(self, artist: Artist, renderer: RendererBase, clip_box: Bbox):
         self._artist = artist

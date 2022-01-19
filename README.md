@@ -41,7 +41,7 @@ fig.show()
 ```
 ![First example plot results, two views of the same plot.](https://user-images.githubusercontent.com/47544550/149814592-dd815f95-c3ef-406d-bd7e-504859c836bf.png)
 
-An inset axes example .
+An inset axes example.
 ```python
 from matplotlib import cbook
 import matplotlib.pyplot as plt
@@ -77,3 +77,46 @@ ax.indicate_inset_zoom(axins, edgecolor="black")
 fig.show()
 ```
 ![Second example plot results, an inset axes showing a zoom view of an image.](https://user-images.githubusercontent.com/47544550/149814558-c2b1228d-2e5d-41be-86c0-f5dd01d42884.png)
+
+Because views support recursive drawing, they can be used to create 
+fractals also.
+```python
+import matplotlib.pyplot as plt
+import matplotview as mpv
+from matplotlib.patches import PathPatch
+from matplotlib.path import Path
+from matplotlib.transforms import Affine2D
+
+outside_color = "black"
+inner_color = "white"
+
+t = Affine2D().scale(-0.5)
+
+outer_triangle = Path.unit_regular_polygon(3)
+inner_triangle = t.transform_path(outer_triangle)
+b = outer_triangle.get_extents()
+
+fig, ax = plt.subplots(1)
+ax.set_aspect(1)
+
+ax.add_patch(PathPatch(outer_triangle, fc=outside_color, ec=[0] * 4))
+ax.add_patch(PathPatch(inner_triangle, fc=inner_color, ec=[0] * 4))
+ax.set_xlim(b.x0, b.x1)
+ax.set_ylim(b.y0, b.y1)
+
+ax_locs = [
+    [0, 0, 0.5, 0.5],
+    [0.5, 0, 0.5, 0.5],
+    [0.25, 0.5, 0.5, 0.5]
+]
+
+for loc in ax_locs:
+    inax = mpv.inset_zoom_axes(ax, loc, render_depth=6)
+    inax.set_xlim(b.x0, b.x1)
+    inax.set_ylim(b.y0, b.y1)
+    inax.axis("off")
+    inax.patch.set_visible(False)
+
+fig.show()
+```
+![Third example plot results, a Sierpiński triangle](https://user-images.githubusercontent.com/47544550/150047401-e9364f0f-becd-45c5-a6f4-062118ce713f.png)
