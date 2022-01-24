@@ -42,12 +42,7 @@ class BoundRendererArtist:
         # If we are working with a 3D object, swap out it's axes with
         # this zoom axes (swapping out the 3d transform) and reproject it.
         if(hasattr(self._artist, "do_3d_projection")):
-            ax = self._artist.axes
-            self._artist.axes = None
-            self._artist.axes = self._renderer.bounding_axes
-            self._artist.do_3d_projection()
-            self._artist.axes = None
-            self._artist.axes = ax
+            self.do_3d_projection()
 
         # Check and see if the passed limiting box and extents of the
         # artist intersect, if not don't bother drawing this artist.
@@ -56,6 +51,18 @@ class BoundRendererArtist:
 
         # Re-enable the clip box...
         self._artist.set_clip_box(clip_box_orig)
+
+    def do_3d_projection(self):
+        do_3d_projection = getattr(self._artist, "do_3d_projection")
+
+        ax = self._artist.axes
+        self._artist.axes = None
+        self._artist.axes = self._renderer.bounding_axes
+        res = do_3d_projection()
+        self._artist.axes = None
+        self._artist.axes = ax
+
+        return res
 
 
 def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
