@@ -5,6 +5,13 @@ matplotview provides a simple interface for creating "views" of matplotlib
 axes, providing a simple way of displaying overviews and zoomed views of 
 data without plotting data twice.
 
+## Installation
+
+You can install matplotview using pip:
+```bash
+pip install matplotview
+```
+
 ## Usage
 
 matplotview provides two methods, `view`, and `inset_zoom_axes`. The `view`
