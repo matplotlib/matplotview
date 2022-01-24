@@ -78,6 +78,10 @@ class _TransformRenderer(RendererBase):
                 f"Invalid Interpolation Mode: {image_interpolation}"
             )
 
+    @property
+    def bounding_axes(self):
+        return self.__bounding_axes
+
     def _scale_gc(self, gc):
         transfer_transform = self._get_transfer_transform(IdentityTransform())
         new_gc = self.__renderer.new_gc()
@@ -187,6 +191,8 @@ class _TransformRenderer(RendererBase):
 
         # Change the clip to the sub-axes box
         gc.set_clip_rectangle(bbox)
+
+        rgbFace = tuple(rgbFace) if(rgbFace is not None) else None
 
         self.__renderer.draw_path(gc, path, IdentityTransform(), rgbFace)
 

@@ -10,7 +10,12 @@ from matplotlib.backend_bases import RendererBase
 DEFAULT_RENDER_DEPTH = 5
 
 class BoundRendererArtist:
-    def __init__(self, artist: Artist, renderer: RendererBase, clip_box: Bbox):
+    def __init__(
+        self,
+        artist: Artist,
+        renderer: _TransformRenderer,
+        clip_box: Bbox
+    ):
         self._artist = artist
         self._renderer = renderer
         self._clip_box = clip_box
@@ -33,6 +38,16 @@ class BoundRendererArtist:
         clip_box_orig = self._artist.get_clip_box()
         full_extents = self._artist.get_window_extent(self._renderer)
         self._artist.set_clip_box(full_extents)
+
+        # If we are working with a 3D object, swap out it's axes with
+        # this zoom axes (swapping out the 3d transform) and reproject it.
+        if(hasattr(self._artist, "do_3d_projection")):
+            ax = self._artist.axes
+            self._artist.axes = None
+            self._artist.axes = self._renderer.bounding_axes
+            self._artist.do_3d_projection()
+            self._artist.axes = None
+            self._artist.axes = ax
 
         # Check and see if the passed limiting box and extents of the
         # artist intersect, if not don't bother drawing this artist.

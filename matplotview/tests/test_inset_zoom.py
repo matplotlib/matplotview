@@ -105,3 +105,31 @@ def test_plotting_in_view(fig_test, fig_ref):
         textcoords="axes fraction", arrowprops=arrow_s
     )
     ax_ref.indicate_inset_zoom(axins_ref, edgecolor="black")
+
+
+@check_figures_equal()
+def test_3d_view(fig_test, fig_ref):
+    # The data...
+    X = Y = np.arange(-5, 5, 0.25)
+    X, Y = np.meshgrid(X, Y)
+    Z = np.sin(np.sqrt(X ** 2 + Y ** 2))
+
+    # Test Case...
+    ax1_test, ax2_test = fig_test.subplots(
+        1, 2, subplot_kw=dict(projection="3d")
+    )
+    ax1_test.plot_surface(X, Y, Z)
+    view(ax2_test, ax1_test)
+    ax2_test.set_xlim(-10, 10)
+    ax2_test.set_ylim(-10, 10)
+    ax2_test.set_zlim(-2, 2)
+
+    # Reference
+    ax1_ref, ax2_ref = fig_ref.subplots(
+        1, 2, subplot_kw=dict(projection="3d")
+    )
+    ax1_ref.plot_surface(X, Y, Z)
+    ax2_ref.plot_surface(X, Y, Z)
+    ax2_ref.set_xlim(-10, 10)
+    ax2_ref.set_ylim(-10, 10)
+    ax2_ref.set_zlim(-2, 2)
