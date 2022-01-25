@@ -1,5 +1,5 @@
 import itertools
-from typing import Type, List, Optional, Callable
+from typing import Type, List, Optional, Callable, Any
 from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
 import matplotlib.docstring as docstring
@@ -9,7 +9,7 @@ from matplotlib.backend_bases import RendererBase
 
 DEFAULT_RENDER_DEPTH = 5
 
-class BoundRendererArtist:
+class _BoundRendererArtist:
     def __init__(
         self,
         artist: Artist,
@@ -20,13 +20,13 @@ class BoundRendererArtist:
         self._renderer = renderer
         self._clip_box = clip_box
 
-    def __getattribute__(self, item):
+    def __getattribute__(self, item: str) -> Any:
         try:
             return super().__getattribute__(item)
         except AttributeError:
             return self._artist.__getattribute__(item)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value: Any):
         try:
             super().__setattr__(key, value)
         except AttributeError:
@@ -36,8 +36,11 @@ class BoundRendererArtist:
         # Disable the artist defined clip box, as the artist might be visible
         # under the new renderer even if not on screen...
         clip_box_orig = self._artist.get_clip_box()
+        clip_path_orig = self._artist.get_clip_path()
+
         full_extents = self._artist.get_window_extent(self._renderer)
-        self._artist.set_clip_box(full_extents)
+        self._artist.set_clip_box(None)
+        self._artist.set_clip_path(None)
 
         # If we are working with a 3D object, swap out it's axes with
         # this zoom axes (swapping out the 3d transform) and reproject it.
@@ -49,16 +52,21 @@ class BoundRendererArtist:
         if(Bbox.intersection(full_extents, self._clip_box) is not None):
             self._artist.draw(self._renderer)
 
-        # Re-enable the clip box...
+        # Re-enable the clip box... and clip path...
         self._artist.set_clip_box(clip_box_orig)
+        self._artist.set_clip_path(clip_path_orig)
 
-    def do_3d_projection(self):
+    def do_3d_projection(self) -> float:
+        # Get the 3D projection function...
         do_3d_projection = getattr(self._artist, "do_3d_projection")
 
+        # Intentionally replace the axes of the artist with the view axes,
+        # as the do_3d_projection pulls the 3D transform (M) from the axes.
+        # Then reproject, and restore the original axes.
         ax = self._artist.axes
-        self._artist.axes = None
+        self._artist.axes = None  # Set to None first to avoid exception...
         self._artist.axes = self._renderer.bounding_axes
-        res = do_3d_projection()
+        res = do_3d_projection()  # Returns a z-order value...
         self._artist.axes = None
         self._artist.axes = ax
 
@@ -195,9 +203,10 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
 
                 init_list = super().get_children()
                 init_list.extend([
-                    BoundRendererArtist(a, mock_renderer, axes_box)
+                    _BoundRendererArtist(a, mock_renderer, axes_box)
                     for a in itertools.chain(
-                        self.__view_axes._children, self.__view_axes.child_axes
+                        self.__view_axes._children,
+                        self.__view_axes.child_axes
                     ) if(self.__filter_function(a))
                 ])
 

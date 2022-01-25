@@ -1,5 +1,7 @@
 from matplotlib.backend_bases import RendererBase
-from matplotlib.transforms import Bbox, IdentityTransform, Affine2D
+from matplotlib.patches import Rectangle
+from matplotlib.transforms import Bbox, IdentityTransform, Affine2D, \
+    TransformedPatchPath
 from matplotlib.path import Path
 import matplotlib._image as _image
 import numpy as np
@@ -101,9 +103,7 @@ class _TransformRenderer(RendererBase):
         Private method, get the bounding box of the child axes in display
         coordinates.
         """
-        return self.__bounding_axes.patch.get_bbox().transformed(
-            self.__bounding_axes.transAxes
-        )
+        return self.__bounding_axes.get_window_extent()
 
     def _get_transfer_transform(self, orig_transform):
         """
@@ -191,6 +191,8 @@ class _TransformRenderer(RendererBase):
 
         # Change the clip to the sub-axes box
         gc.set_clip_rectangle(bbox)
+        if(not isinstance(self.__bounding_axes.patch, Rectangle)):
+            gc.set_clip_path(TransformedPatchPath(self.__bounding_axes.patch))
 
         rgbFace = tuple(rgbFace) if(rgbFace is not None) else None
 
@@ -219,12 +221,14 @@ class _TransformRenderer(RendererBase):
             gc = self._scale_gc(gc)
 
         gc.set_clip_rectangle(bbox)
+        if(not isinstance(self.__bounding_axes.patch, Rectangle)):
+            gc.set_clip_path(TransformedPatchPath(self.__bounding_axes.patch))
 
         self.__renderer.draw_gouraud_triangle(gc, path.vertices, colors,
                                               IdentityTransform())
 
     # Images prove to be especially messy to deal with...
-    def draw_image(self, gc, x, y, im, transform=None):
+    def draw_image(self, gc, x, y, im, transform = None):
         mag = self.get_image_magnification()
         shift_data_transform = self._get_transfer_transform(
             IdentityTransform()
@@ -273,6 +277,8 @@ class _TransformRenderer(RendererBase):
             gc = self._scale_gc(gc)
 
         gc.set_clip_rectangle(clipped_out_box)
+        if(not isinstance(self.__bounding_axes.patch, Rectangle)):
+            gc.set_clip_path(TransformedPatchPath(self.__bounding_axes.patch))
 
         x, y = clipped_out_box.x0, clipped_out_box.y0
 

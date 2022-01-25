@@ -118,8 +118,9 @@ def test_3d_view(fig_test, fig_ref):
     ax1_test, ax2_test = fig_test.subplots(
         1, 2, subplot_kw=dict(projection="3d")
     )
-    ax1_test.plot_surface(X, Y, Z)
+    ax1_test.plot_surface(X, Y, Z, cmap="plasma")
     view(ax2_test, ax1_test)
+    ax2_test.view_init(elev=80)
     ax2_test.set_xlim(-10, 10)
     ax2_test.set_ylim(-10, 10)
     ax2_test.set_zlim(-2, 2)
@@ -128,8 +129,29 @@ def test_3d_view(fig_test, fig_ref):
     ax1_ref, ax2_ref = fig_ref.subplots(
         1, 2, subplot_kw=dict(projection="3d")
     )
-    ax1_ref.plot_surface(X, Y, Z)
-    ax2_ref.plot_surface(X, Y, Z)
+    ax1_ref.plot_surface(X, Y, Z, cmap="plasma")
+    ax2_ref.plot_surface(X, Y, Z, cmap="plasma")
+    ax2_ref.view_init(elev=80)
     ax2_ref.set_xlim(-10, 10)
     ax2_ref.set_ylim(-10, 10)
     ax2_ref.set_zlim(-2, 2)
+
+@check_figures_equal()
+def test_polar_view(fig_test, fig_ref):
+    r = np.arange(0, 2, 0.01)
+    theta = 2 * np.pi * r
+
+    # Test Case with polar coordinate system...
+    ax_t1, ax_t2 = fig_test.subplots(1, 2, subplot_kw=dict(projection="polar"))
+    ax_t1.plot(theta, r)
+    ax_t1.set_rmax(2)
+    view(ax_t2, ax_t1)
+    ax_t2.set_linescaling(False)
+    ax_t2.set_rmax(1)
+
+    # Reference...
+    ax_r1, ax_r2 = fig_ref.subplots(1, 2, subplot_kw=dict(projection="polar"))
+    ax_r1.plot(theta, r)
+    ax_r1.set_rmax(2)
+    ax_r2.plot(theta, r)
+    ax_r2.set_rmax(1)
