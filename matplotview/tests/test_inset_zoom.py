@@ -155,3 +155,29 @@ def test_polar_view(fig_test, fig_ref):
     ax_r1.set_rmax(2)
     ax_r2.plot(theta, r)
     ax_r2.set_rmax(1)
+
+@check_figures_equal()
+def test_map_projection_view(fig_test, fig_ref):
+    x = np.linspace(-2.5, 2.5, 20)
+    y = np.linspace(-1, 1, 20)
+    circ_gen = lambda: plt.Circle((1.5, 0.25), 0.7, ec="black", fc="blue")
+
+    # Test case...
+    ax_t1 = fig_test.add_subplot(1, 2, 1, projection="hammer")
+    ax_t2 = fig_test.add_subplot(1, 2, 2, projection="lambert")
+    ax_t1.grid(True)
+    ax_t2.grid(True)
+    ax_t1.plot(x, y)
+    ax_t1.add_patch(circ_gen())
+    view(ax_t2, ax_t1)
+    ax_t2.set_linescaling(False)
+
+    # Reference...
+    ax_r1 = fig_ref.add_subplot(1, 2, 1, projection="hammer")
+    ax_r2 = fig_ref.add_subplot(1, 2, 2, projection="lambert")
+    ax_r1.grid(True)
+    ax_r2.grid(True)
+    ax_r1.plot(x, y)
+    ax_r1.add_patch(circ_gen())
+    ax_r2.plot(x, y)
+    ax_r2.add_patch(circ_gen())

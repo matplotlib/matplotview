@@ -49,7 +49,12 @@ class _BoundRendererArtist:
 
         # Check and see if the passed limiting box and extents of the
         # artist intersect, if not don't bother drawing this artist.
-        if(Bbox.intersection(full_extents, self._clip_box) is not None):
+        # First 2 checks are a special case where we received a bad clip box.
+        # (those can happen when we try to get the bounds of a map projection)
+        if(
+            self._clip_box.width == 0 or self._clip_box.height == 0 or
+            Bbox.intersection(full_extents, self._clip_box) is not None
+        ):
             self._artist.draw(self._renderer)
 
         # Re-enable the clip box... and clip path...
