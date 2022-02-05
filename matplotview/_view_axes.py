@@ -267,9 +267,13 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         def __reduce__(self):
             builder, args = super().__reduce__()[:2]
 
-            if(type(self) in args):
-                builder = super().__new__
-                args = (type(self).__bases__[0],)
+            if(self.__new__ == builder):
+                builder = super().__new__()
+
+            cls = type(self)
+            args = tuple(
+                arg if(arg != cls) else cls.__bases__[0] for arg in args
+            )
 
             return (
                 _view_from_pickle,
