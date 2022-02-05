@@ -67,14 +67,12 @@ def test_zoom_plot_pickle():
     axins_test.set_ylim(1, 5)
     ax_test.indicate_inset_zoom(axins_test, edgecolor="black")
 
-    fig_test.savefig("before.png")
     img_expected = to_image(fig_test)
 
     saved_fig = pickle.dumps(fig_test)
     plt.clf()
 
     fig_test = pickle.loads(saved_fig)
-    fig_test.savefig("after.png")
     img_result = to_image(fig_test)
 
     assert np.all(img_expected == img_result)
