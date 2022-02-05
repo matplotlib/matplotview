@@ -1,12 +1,7 @@
 import matplotlib.pyplot as plt
-import pickle
+from matplotview.tests.utils import plotting_test, matches_post_pickle
 from matplotview import view, view_wrapper, inset_zoom_axes
 import numpy as np
-
-def to_image(figure):
-    figure.canvas.draw()
-    img = np.frombuffer(figure.canvas.tostring_rgb(), dtype=np.uint8)
-    return img.reshape(figure.canvas.get_width_height()[::-1] + (3,))
 
 
 def test_obj_comparison():
@@ -21,12 +16,13 @@ def test_obj_comparison():
     assert view_class2 != view_class3
 
 
-def test_subplot_view_pickle():
+@plotting_test()
+def test_subplot_view_pickle(fig_test):
     np.random.seed(1)
     im_data = np.random.rand(30, 30)
 
     # Test case...
-    fig_test, (ax_test1, ax_test2) = plt.subplots(1, 2)
+    ax_test1, ax_test2 = fig_test.subplots(1, 2)
 
     ax_test1.plot([i for i in range(10)], "r")
     ax_test1.add_patch(plt.Circle((3, 3), 1, ec="black", fc="blue"))
@@ -38,24 +34,15 @@ def test_subplot_view_pickle():
     ax_test2.set_xlim(ax_test1.get_xlim())
     ax_test2.set_ylim(ax_test1.get_ylim())
 
-    img_expected = to_image(fig_test)
+    assert matches_post_pickle(fig_test)
 
-    saved_fig = pickle.dumps(fig_test)
-    plt.clf()
-
-    fig_test = pickle.loads(saved_fig)
-    img_result = to_image(fig_test)
-
-    assert np.all(img_expected == img_result)
-
-
-def test_zoom_plot_pickle():
+@plotting_test()
+def test_zoom_plot_pickle(fig_test):
     np.random.seed(1)
-    plt.clf()
     im_data = np.random.rand(30, 30)
+    arrow_s = dict(arrowstyle="->")
 
     # Test Case...
-    fig_test = plt.gcf()
     ax_test = fig_test.gca()
     ax_test.plot([i for i in range(10)], "r")
     ax_test.add_patch(plt.Circle((3, 3), 1, ec="black", fc="blue"))
@@ -65,14 +52,29 @@ def test_zoom_plot_pickle():
     axins_test.set_linescaling(False)
     axins_test.set_xlim(1, 5)
     axins_test.set_ylim(1, 5)
+    axins_test.annotate(
+        "Interesting", (3, 3), (0, 0),
+        textcoords="axes fraction", arrowprops=arrow_s
+    )
     ax_test.indicate_inset_zoom(axins_test, edgecolor="black")
 
-    img_expected = to_image(fig_test)
+    assert matches_post_pickle(fig_test)
 
-    saved_fig = pickle.dumps(fig_test)
-    plt.clf()
 
-    fig_test = pickle.loads(saved_fig)
-    img_result = to_image(fig_test)
+@plotting_test()
+def test_3d_view_pickle(fig_test):
+    X = Y = np.arange(-5, 5, 0.25)
+    X, Y = np.meshgrid(X, Y)
+    Z = np.sin(np.sqrt(X ** 2 + Y ** 2))
 
-    assert np.all(img_expected == img_result)
+    ax1_test, ax2_test = fig_test.subplots(
+        1, 2, subplot_kw=dict(projection="3d")
+    )
+    ax1_test.plot_surface(X, Y, Z, cmap="plasma")
+    view(ax2_test, ax1_test)
+    ax2_test.view_init(elev=80)
+    ax2_test.set_xlim(-10, 10)
+    ax2_test.set_ylim(-10, 10)
+    ax2_test.set_zlim(-2, 2)
+
+    assert matches_post_pickle(fig_test)
