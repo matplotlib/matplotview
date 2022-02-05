@@ -1,3 +1,4 @@
+import functools
 import itertools
 from typing import Type, List, Optional, Callable, Any
 from matplotlib.axes import Axes
@@ -77,7 +78,12 @@ class _BoundRendererArtist:
 
         return res
 
+def _view_from_pickle(builder, args):
+    res = builder(*args)
+    res.__class__ = view_wrapper(type(res))
+    return res
 
+@functools.lru_cache(None)
 def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
     """
     Construct a ViewAxes, which subclasses, or wraps a specific Axes subclass.
@@ -95,15 +101,12 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         The view axes wrapper for a given axes class, capable of display
         other axes contents...
     """
-
     @docstring.interpd
-    class ViewAxesImpl(axes_class):
+    class View(axes_class):
         """
         An axes which automatically displays elements of another axes. Does not
         require Artists to be plotted twice.
         """
-        __module__ = axes_class.__module__
-
         def __init__(
             self,
             axes_to_view: Axes,
@@ -113,7 +116,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             filter_function: Optional[Callable[[Artist], bool]] = None,
             **kwargs
         ):
-            f"""
+            """
             Construct a new view axes.
 
             Parameters
@@ -170,10 +173,10 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         ):
             if(render_depth < 1):
                 raise ValueError(f"Render depth of {render_depth} is invalid.")
-            if(filter_function is None):
-                filter_function = lambda a: True
-            if(not callable(filter_function)):
-                raise ValueError(f"The filter function must be a callable!")
+            if(filter_function is not None and not callable(filter_function)):
+                raise ValueError(
+                    f"The filter function must be a callable or None!"
+                )
 
             self.__view_axes = axes_to_view
             # The current render depth is stored in the figure, so the number
@@ -212,13 +215,14 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                     for a in itertools.chain(
                         self.__view_axes._children,
                         self.__view_axes.child_axes
-                    ) if(self.__filter_function(a))
+                    ) if(self.__filter_function is None
+                         or self.__filter_function(a))
                 ])
 
                 return init_list
             else:
                 return super().get_children()
-            
+
         def draw(self, renderer: RendererBase = None):
             # It is possible to have two axes which are views of each other
             # therefore we track the number of recursions and stop drawing
@@ -260,6 +264,26 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             """
             self.__scale_lines = value
 
+        def __reduce__(self):
+            builder, args = super().__reduce__()[:2]
+
+            if(type(self) in args):
+                builder = super().__new__
+                args = (type(self).__bases__[0],)
+
+            return (
+                _view_from_pickle,
+                (builder, args),
+                self.__getstate__()
+            )
+
+        def __getstate__(self):
+            state = super().__getstate__()
+            state["__renderer"] = None
+            # We don't support pickling the filter...
+            state["__filter_function"] = None
+            return state
+
         @classmethod
         def from_axes(
             cls,
@@ -276,10 +300,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             )
             return axes
 
-    new_name = f"{ViewAxesImpl.__name__}[{axes_class.__name__}]"
-    ViewAxesImpl.__name__ = ViewAxesImpl.__qualname__ = new_name
+    View.__name__ = f"{View.__name__}[{axes_class.__name__}]"
+    View.__qualname__ = f"{View.__qualname__}[{axes_class.__name__}]"
 
-    return ViewAxesImpl
-
-
-ViewAxes = view_wrapper(Axes)
+    return View

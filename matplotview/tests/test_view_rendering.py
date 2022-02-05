@@ -136,6 +136,7 @@ def test_3d_view(fig_test, fig_ref):
     ax2_ref.set_ylim(-10, 10)
     ax2_ref.set_zlim(-2, 2)
 
+
 @check_figures_equal()
 def test_polar_view(fig_test, fig_ref):
     r = np.arange(0, 2, 0.01)
@@ -155,6 +156,7 @@ def test_polar_view(fig_test, fig_ref):
     ax_r1.set_rmax(2)
     ax_r2.plot(theta, r)
     ax_r2.set_rmax(1)
+
 
 @check_figures_equal()
 def test_map_projection_view(fig_test, fig_ref):
