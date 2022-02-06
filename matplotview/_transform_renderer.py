@@ -85,18 +85,24 @@ class _TransformRenderer(RendererBase):
         return self.__bounding_axes
 
     def _scale_gc(self, gc):
-        transfer_transform = self._get_transfer_transform(IdentityTransform())
-        new_gc = self.__renderer.new_gc()
-        new_gc.copy_properties(gc)
+        with np.errstate(all='ignore'):
+            transfer_transform = self._get_transfer_transform(
+                IdentityTransform()
+            )
+            new_gc = self.__renderer.new_gc()
+            new_gc.copy_properties(gc)
 
-        unit_box = Bbox.from_bounds(0, 0, 1, 1)
-        unit_box = transfer_transform.transform_bbox(unit_box)
-        mult_factor = np.sqrt(unit_box.width * unit_box.height)
+            unit_box = Bbox.from_bounds(0, 0, 1, 1)
+            unit_box = transfer_transform.transform_bbox(unit_box)
+            mult_factor = np.sqrt(unit_box.width * unit_box.height)
 
-        new_gc.set_linewidth(gc.get_linewidth() * mult_factor)
-        new_gc._hatch_linewidth = gc.get_hatch_linewidth() * mult_factor
+            if(mult_factor == 0 or (not np.isfinite(mult_factor))):
+                return new_gc
 
-        return new_gc
+            new_gc.set_linewidth(gc.get_linewidth() * mult_factor)
+            new_gc._hatch_linewidth = gc.get_hatch_linewidth() * mult_factor
+
+            return new_gc
 
     def _get_axes_display_box(self):
         """

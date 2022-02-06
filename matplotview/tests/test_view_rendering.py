@@ -172,7 +172,7 @@ def test_map_projection_view(fig_test, fig_ref):
     ax_t1.plot(x, y)
     ax_t1.add_patch(circ_gen())
     view(ax_t2, ax_t1)
-    ax_t2.set_linescaling(False)
+    #ax_t2.set_linescaling(False)
 
     # Reference...
     ax_r1 = fig_ref.add_subplot(1, 2, 1, projection="hammer")
