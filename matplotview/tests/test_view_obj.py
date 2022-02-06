@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
+from matplotlib.testing.decorators import check_figures_equal
 from matplotview.tests.utils import plotting_test, matches_post_pickle
-from matplotview import view, view_wrapper, inset_zoom_axes
+from matplotview import view, view_wrapper, inset_zoom_axes, DEFAULT_RENDER_DEPTH
 import numpy as np
 
 
@@ -15,6 +16,48 @@ def test_obj_comparison():
     assert view_class1 == view_class2
     assert view_class2 != view_class3
 
+
+@check_figures_equal(tol=5.6)
+def test_getters_and_setters(fig_test, fig_ref):
+    np.random.seed(1)
+    im_data1 = np.random.rand(30, 30)
+    im_data2 = np.random.rand(20, 20)
+
+    ax1, ax2, ax3 = fig_test.subplots(1, 3)
+    ax1.imshow(im_data1, origin="lower", interpolation="nearest")
+    ax2.imshow(im_data2, origin="lower", interpolation="nearest")
+    ax2.plot([i for i in range(10)])
+    line = ax2.plot([i for i in range(10, 0, -1)])[0]
+    view(ax3, ax1)
+    ax3.set_xlim(0, 30)
+    ax3.set_ylim(0, 30)
+    ax3.set_aspect(1)
+
+    # Assert all getters return default or set values...
+    assert ax3.get_axes_to_view() is ax1
+    assert ax3.get_image_interpolation() == "nearest"
+    assert ax3.get_max_render_depth() == DEFAULT_RENDER_DEPTH
+    assert ax3.get_linescaling() == True
+    assert ax3.get_filter_function() is None
+
+    # Attempt setting to different values...
+    ax3.set_axes_to_view(ax2)
+    # If this doesn't change pdf backend gets error > 5.6....
+    ax3.set_image_interpolation("bicubic")
+    ax3.set_max_render_depth(10)
+    ax3.set_linescaling(False)
+    ax3.set_filter_function(lambda a: a != line)
+
+    # Compare against new thing...
+    ax1, ax2, ax3 = fig_ref.subplots(1, 3)
+    ax1.imshow(im_data1, origin="lower", interpolation="nearest")
+    ax2.imshow(im_data2, origin="lower", interpolation="nearest")
+    ax2.plot([i for i in range(10)])
+    ax2.plot([i for i in range(10, 0, -1)])
+    ax3.imshow(im_data2, origin="lower", interpolation="nearest")
+    ax3.plot([i for i in range(10)])
+    ax3.set_xlim(0, 30)
+    ax3.set_ylim(0, 30)
 
 @plotting_test()
 def test_subplot_view_pickle(fig_test):
@@ -59,7 +102,6 @@ def test_zoom_plot_pickle(fig_test):
     ax_test.indicate_inset_zoom(axins_test, edgecolor="black")
 
     assert matches_post_pickle(fig_test)
-
 
 @plotting_test()
 def test_3d_view_pickle(fig_test):
