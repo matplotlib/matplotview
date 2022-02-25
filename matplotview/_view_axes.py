@@ -106,6 +106,12 @@ class ViewSpecification:
             self.filter_set = set(self.filter_set)
         self.scale_lines = bool(self.scale_lines)
 
+class __ViewType:
+    """
+    PRIVATE: A simple identifier class for identifying view types, a view
+    will inherit from the axes class it is wrapping and this type...
+    """
+    ...
 
 # Cache classes so grabbing the same type twice leads to actually getting the
 # same type (and type comparisons work).
@@ -127,8 +133,11 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         The view axes wrapper for a given axes class, capable of displaying
         another axes contents...
     """
+    if(issubclass(axes_class, Axes) and issubclass(axes_class, __ViewType)):
+        return axes_class
+
     @docstring.interpd
-    class View(axes_class):
+    class View(axes_class, __ViewType):
         """
         An axes which automatically displays elements of another axes. Does not
         require Artists to be plotted twice.
@@ -151,10 +160,10 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 Additional arguments to be passed to the Axes class this
                 ViewAxes wraps.
 
-            render_depth: int, positive, defaults to 10
+            render_depth: int, positive, defaults to 5
                 The number of recursive draws allowed for this view, this can
                 happen if the view is a child of the axes (such as an inset
-                axes) or if two views point at each other. Defaults to 10.
+                axes) or if two views point at each other. Defaults to 5.
 
             **kwargs
                 Other optional keyword arguments supported by the Axes
@@ -171,10 +180,12 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             self._init_vars(render_depth)
 
         def _init_vars(self, render_depth: int = DEFAULT_RENDER_DEPTH):
-            # Initialize the view specs set...
-            self.__view_specs = {}
+            # Initialize the view specs dict...
+            self.__view_specs = getattr(self, "__view_specs", {})
             self.__renderer = None
-            self.__max_render_depth = DEFAULT_RENDER_DEPTH
+            self.__max_render_depth = getattr(
+                self, "__max_render_depth", DEFAULT_RENDER_DEPTH
+            )
             self.set_max_render_depth(render_depth)
             # The current render depth is stored in the figure, so the number
             # of recursive draws is even in the case of multiple axes drawing
@@ -297,11 +308,14 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             """
             return self.__view_specs
 
+        # Shortcut for easier access...
+        view_specs = view_specifications
+
         @classmethod
         def from_axes(
             cls,
             axes: Axes,
-            render_depth: int = DEFAULT_RENDER_DEPTH
+            render_depth: Optional[int] = None
         ) -> Axes:
             """
             Convert an Axes into a View in-place. This is used by public
@@ -314,10 +328,11 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             axes: Axes
                 The axes to convert to a view wrapping the same axes type.
 
-            render_depth: int, positive, defaults to 10
+            render_depth: optional int, positive, defaults to None
                 The number of recursive draws allowed for this view, this can
                 happen if the view is a child of the axes (such as an inset
-                axes) or if two views point at each other. Defaults to 10.
+                axes) or if two views point at each other. If none, use the
+                default value (5) if the render depth is not already set.
 
             Returns
             -------
@@ -329,18 +344,24 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             ------
             TypeError
                 If the provided axes to convert has an Axes type which does
-                not match the axes class this view type wraps.ss
+                not match the axes class this view type wraps.
             """
+            if(isinstance(axes, cls)):
+                if(render_depth is not None):
+                    axes.set_max_render_depth(render_depth)
+                return axes
+
             if(type(axes) != axes_class):
                 raise TypeError(
                     f"Can't convert {type(axes).__name__} to {cls.__name__}"
                 )
 
-            if(isinstance(axes, cls)):
-                return axes
-
             axes.__class__ = cls
-            axes._init_vars(render_depth)
+            axes._init_vars(
+                DEFAULT_RENDER_DEPTH
+                if(render_depth is None)
+                else render_depth
+            )
             return axes
 
     View.__name__ = f"{View.__name__}[{axes_class.__name__}]"

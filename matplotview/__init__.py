@@ -3,13 +3,13 @@ from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from matplotview._view_axes import view_wrapper, ViewSpecification, DEFAULT_RENDER_DEPTH
 
-__all__ = ["view", "inset_zoom_axes"]
+__all__ = ["view", "inset_zoom_axes", "ViewSpecification"]
 
 def view(
     axes: Axes,
     axes_to_view: Axes,
     image_interpolation: str = "nearest",
-    render_depth: int = DEFAULT_RENDER_DEPTH,
+    render_depth: Optional[int] = None,
     filter_set: Optional[Iterable[Union[Type[Artist], Artist]]] = None,
     scale_lines: bool = True
 ) -> Axes:
@@ -34,14 +34,17 @@ def view(
         'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos',
         or 'none'
 
-    render_depth: int, positive, defaults to 5
+    render_depth: optional int, positive, defaults to None
         The number of recursive draws allowed for this view, this can happen
         if the view is a child of the axes (such as an inset axes) or if
-        two views point at each other. Defaults to 5.
+        two views point at each other. If None, uses the default render depth
+        of 5, unless the axes passed is already a view axes, in which case the
+        render depth the view already has will be used.
 
     filter_set: Iterable[Union[Type[Artist], Artist]] or None
         An optional filter set, which can be used to select what artists
-        are drawn by the view. Any artists types in the set are not drawn.
+        are drawn by the view. Any artists or artist types in the set are not
+        drawn.
 
     scale_lines: bool, defaults to True
         Specifies if lines should be drawn thicker based on scaling in the
@@ -60,12 +63,12 @@ def inset_zoom_axes(
     axes: Axes,
     bounds: Iterable,
     *,
-    image_interpolation="nearest",
-    render_depth: int = DEFAULT_RENDER_DEPTH,
+    image_interpolation: str = "nearest",
+    render_depth: Optional[int] = None,
     filter_set: Optional[Iterable[Union[Type[Artist], Artist]]] = None,
     scale_lines: bool = True,
-    transform=None,
-    zorder=5,
+    transform = None,
+    zorder: int = 5,
     **kwargs
 ) -> Axes:
     """
@@ -97,10 +100,12 @@ def inset_zoom_axes(
         determines the interpolation used when attempting to render a
         zoomed version of an image.
 
-    render_depth: int, positive, defaults to 5
+    render_depth: optional int, positive, defaults to None
         The number of recursive draws allowed for this view, this can happen
         if the view is a child of the axes (such as an inset axes) or if
-        two views point at each other. Defaults to 5.
+        two views point at each other. If None, uses the default render depth
+        of 5, unless the axes passed is already a view axes, in which case the
+        render depth the view already has will be used.
 
     filter_set: Iterable[Union[Type[Artist], Artist]] or None
         An optional filter set, which can be used to select what artists

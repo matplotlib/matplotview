@@ -181,3 +181,38 @@ def test_map_projection_view(fig_test, fig_ref):
     ax_r1.add_patch(circ_gen())
     ax_r2.plot(x, y)
     ax_r2.add_patch(circ_gen())
+
+
+@check_figures_equal()
+def test_double_view(fig_test, fig_ref):
+    # Test case...
+    ax_test1, ax_test2, ax_test3 = fig_test.subplots(1, 3)
+
+    ax_test1.add_patch(plt.Circle((1, 1), 1.5, ec="black", fc=(0, 0, 1, 0.5)))
+    ax_test3.add_patch(plt.Circle((3, 1), 1.5, ec="black", fc=(1, 0, 0, 0.5)))
+
+    ax_test2 = view(
+        view(ax_test2, ax_test1, scale_lines=False),
+        ax_test3, scale_lines=False
+    )
+
+    ax_test2.set_aspect(1)
+    ax_test2.set_xlim(-0.5, 4.5)
+    ax_test2.set_ylim(-0.5, 2.5)
+
+    # Reference...
+    ax_ref1, ax_ref2, ax_ref3 = fig_ref.subplots(1, 3)
+
+    ax_ref1.add_patch(plt.Circle((1, 1), 1.5, ec="black", fc=(0, 0, 1, 0.5)))
+    ax_ref3.add_patch(plt.Circle((3, 1), 1.5, ec="black", fc=(1, 0, 0, 0.5)))
+
+    ax_ref2.add_patch(plt.Circle((1, 1), 1.5, ec="black", fc=(0, 0, 1, 0.5)))
+    ax_ref2.add_patch(plt.Circle((3, 1), 1.5, ec="black", fc=(1, 0, 0, 0.5)))
+    ax_ref2.set_aspect(1)
+    ax_ref2.set_xlim(-0.5, 4.5)
+    ax_ref2.set_ylim(-0.5, 2.5)
+
+    for ax in (ax_test1, ax_test3, ax_ref1, ax_ref3):
+        ax.set_aspect(1)
+        ax.relim()
+        ax.autoscale_view()
