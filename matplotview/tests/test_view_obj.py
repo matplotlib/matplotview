@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.testing.decorators import check_figures_equal
 from matplotview.tests.utils import plotting_test, matches_post_pickle
-from matplotview import view, view_wrapper, inset_zoom_axes, DEFAULT_RENDER_DEPTH
+from matplotview import view, view_wrapper, inset_zoom_axes, \
+                        DEFAULT_RENDER_DEPTH, ViewSpecification
 import numpy as np
 
 
@@ -34,19 +35,21 @@ def test_getters_and_setters(fig_test, fig_ref):
     ax3.set_aspect(1)
 
     # Assert all getters return default or set values...
-    assert ax3.get_axes_to_view() is ax1
-    assert ax3.get_image_interpolation() == "nearest"
+    assert ax1 in ax3.view_specifications
+    assert ax3.view_specifications[ax1].image_interpolation == "nearest"
     assert ax3.get_max_render_depth() == DEFAULT_RENDER_DEPTH
-    assert ax3.get_linescaling() == True
-    assert ax3.get_filter_function() is None
+    assert ax3.view_specifications[ax1].scale_lines == True
+    assert ax3.view_specifications[ax1].filter_set is None
 
     # Attempt setting to different values...
-    ax3.set_axes_to_view(ax2)
+    del ax3.view_specifications[ax1]
     # If this doesn't change pdf backend gets error > 5.6....
-    ax3.set_image_interpolation("bicubic")
+    ax3.view_specifications[ax2] = ViewSpecification(
+        "bicubic",
+        {line},
+        False
+    )
     ax3.set_max_render_depth(10)
-    ax3.set_linescaling(False)
-    ax3.set_filter_function(lambda a: a != line)
 
     # Compare against new thing...
     ax1, ax2, ax3 = fig_ref.subplots(1, 3)
@@ -91,8 +94,8 @@ def test_zoom_plot_pickle(fig_test):
     ax_test.add_patch(plt.Circle((3, 3), 1, ec="black", fc="blue"))
     ax_test.imshow(im_data, origin="lower", cmap="Blues", alpha=0.5,
                    interpolation="nearest")
-    axins_test = inset_zoom_axes(ax_test, [0.5, 0.5, 0.48, 0.48])
-    axins_test.set_linescaling(False)
+    axins_test = inset_zoom_axes(ax_test, [0.5, 0.5, 0.48, 0.48],
+                                 scale_lines=False)
     axins_test.set_xlim(1, 5)
     axins_test.set_ylim(1, 5)
     axins_test.annotate(

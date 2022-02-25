@@ -1,12 +1,13 @@
 import functools
 import itertools
-from typing import Type, List, Optional, Callable, Any
+from typing import Type, List, Optional, Callable, Any, Set, Dict, Union
 from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
 import matplotlib.docstring as docstring
 from matplotview._transform_renderer import _TransformRenderer
 from matplotlib.artist import Artist
 from matplotlib.backend_bases import RendererBase
+from dataclasses import dataclass
 
 DEFAULT_RENDER_DEPTH = 5
 
@@ -92,6 +93,20 @@ def _view_from_pickle(builder, args):
     res.__class__ = view_wrapper(type(res))
     return res
 
+
+@dataclass
+class ViewSpecification:
+    image_interpolation: str = "nearest"
+    filter_set: Optional[Set[Union[Type[Artist], Artist]]] = None
+    scale_lines: bool = True
+
+    def __post_init__(self):
+        self.image_interpolation = str(self.image_interpolation)
+        if(self.filter_set is not None):
+            self.filter_set = set(self.filter_set)
+        self.scale_lines = bool(self.scale_lines)
+
+
 # Cache classes so grabbing the same type twice leads to actually getting the
 # same type (and type comparisons work).
 @functools.lru_cache(None)
@@ -120,11 +135,8 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         """
         def __init__(
             self,
-            axes_to_view: Axes,
             *args,
-            image_interpolation: str = "nearest",
             render_depth: int = DEFAULT_RENDER_DEPTH,
-            filter_function: Optional[Callable[[Artist], bool]] = None,
             **kwargs
         ):
             """
@@ -139,24 +151,10 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 Additional arguments to be passed to the Axes class this
                 ViewAxes wraps.
 
-            image_interpolation: string
-                Supported options are 'antialiased', 'nearest', 'bilinear',
-                'bicubic', 'spline16', 'spline36', 'hanning', 'hamming',
-                'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel',
-                'mitchell', 'sinc', 'lanczos', or 'none'. The default value is
-                'nearest'. This determines the interpolation used when
-                attempting to render a view of an image.
-
             render_depth: int, positive, defaults to 10
                 The number of recursive draws allowed for this view, this can
                 happen if the view is a child of the axes (such as an inset
                 axes) or if two views point at each other. Defaults to 10.
-
-            filter_function: callable(Artist) -> bool or None
-                An optional filter function, which can be used to select what
-                artists are drawn by the view. If the function returns True,
-                the element is drawn, otherwise it isn't. Defaults to None,
-                or drawing all artists.
 
             **kwargs
                 Other optional keyword arguments supported by the Axes
@@ -169,70 +167,55 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             View
                 The new zoom view axes instance...
             """
-            super().__init__(axes_to_view.figure, *args, **kwargs)
-            self._init_vars(
-                axes_to_view, image_interpolation,
-                render_depth, filter_function
-            )
+            super().__init__(*args, **kwargs)
+            self._init_vars(render_depth)
 
-        def _init_vars(
-            self,
-            axes_to_view: Axes,
-            image_interpolation: str,
-            render_depth: int,
-            filter_function: Optional[Callable[[Artist], bool]]
-        ):
-            if(render_depth < 1):
-                raise ValueError(f"Render depth of {render_depth} is invalid.")
-            if(filter_function is not None and not callable(filter_function)):
-                raise ValueError(
-                    f"The filter function must be a callable or None!"
-                )
-
-            self.__view_axes = axes_to_view
+        def _init_vars(self, render_depth: int = DEFAULT_RENDER_DEPTH):
+            # Initialize the view specs set...
+            self.__view_specs = {}
+            self.__renderer = None
+            self.__max_render_depth = DEFAULT_RENDER_DEPTH
+            self.set_max_render_depth(render_depth)
             # The current render depth is stored in the figure, so the number
             # of recursive draws is even in the case of multiple axes drawing
             # each other in the same figure.
             self.figure._current_render_depth = getattr(
                 self.figure, "_current_render_depth", 0
             )
-            self.__image_interpolation = image_interpolation
-            self.__max_render_depth = render_depth
-            self.__filter_function = filter_function
-            self.__scale_lines = True
-            self.__renderer = None
 
         def get_children(self) -> List[Artist]:
             # We overload get_children to return artists from the view axes
             # in addition to this axes when drawing. We wrap the artists
             # in a BoundRendererArtist, so they are drawn with an alternate
             # renderer, and therefore to the correct location.
+            child_list = super().get_children()
+
             if(self.__renderer is not None):
-                mock_renderer = _TransformRenderer(
-                    self.__renderer, self.__view_axes.transData,
-                    self.transData, self, self.__image_interpolation,
-                    self.__scale_lines
-                )
+                for ax, spec in self.view_specifications.items():
+                    mock_renderer = _TransformRenderer(
+                        self.__renderer, ax.transData, self.transData,
+                        self, spec.image_interpolation, spec.scale_lines
+                    )
 
-                x1, x2 = self.get_xlim()
-                y1, y2 = self.get_ylim()
-                axes_box = Bbox.from_extents(x1, y1, x2, y2).transformed(
-                    self.__view_axes.transData
-                )
+                    x1, x2 = self.get_xlim()
+                    y1, y2 = self.get_ylim()
+                    axes_box = Bbox.from_extents(x1, y1, x2, y2).transformed(
+                        ax.transData
+                    )
 
-                init_list = super().get_children()
-                init_list.extend([
-                    _BoundRendererArtist(a, mock_renderer, axes_box)
-                    for a in itertools.chain(
-                        self.__view_axes._children,
-                        self.__view_axes.child_axes
-                    ) if(self.__filter_function is None
-                         or self.__filter_function(a))
-                ])
+                    child_list.extend([
+                        _BoundRendererArtist(a, mock_renderer, axes_box)
+                        for a in itertools.chain(
+                            ax._children,
+                            ax.child_axes
+                        ) if(
+                                (spec.filter_set is None)
+                                or ((a not in spec.filter_set)
+                                and (type(a) not in spec.filter_set))
+                        )
+                    ])
 
-                return init_list
-            else:
-                return super().get_children()
+            return child_list
 
         def draw(self, renderer: RendererBase = None):
             # It is possible to have two axes which are views of each other
@@ -251,60 +234,27 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             self.__renderer = None
             self.figure._current_render_depth -= 1
 
-        def get_axes_to_view(self) -> Axes:
-            """
-            Get the axes this view will display.
+        def __reduce__(self):
+            builder, args = super().__reduce__()[:2]
 
-            Returns
-            -------
-            Axes
-                The axes being viewed.
-            """
-            return self.__view_axes
+            if(self.__new__ == builder):
+                builder = super().__new__()
 
-        def set_axes_to_view(self, ax: Axes):
-            """
-            Set the axes this view will display.
+            cls = type(self)
+            args = tuple(
+                arg if(arg != cls) else cls.__bases__[0] for arg in args
+            )
 
-            Parameters
-            ----------
-            ax: Axes
-                The new axes to be viewed.
-            """
-            self.__view_axes = ax
+            return (
+                _view_from_pickle,
+                (builder, args),
+                self.__getstate__()
+            )
 
-        def get_image_interpolation(self) -> str:
-            """
-            Get the current image interpolation used for rendering views of
-            images. Supported options are 'antialiased', 'nearest', 'bilinear',
-            'bicubic', 'spline16', 'spline36', 'hanning', 'hamming',
-            'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel',
-            'mitchell', 'sinc', 'lanczos', or 'none'. The default value is
-            'nearest'.
-
-            Returns
-            -------
-            string
-                The current image interpolation used when rendering views of
-                images in this view axes.
-            """
-            return self.__image_interpolation
-
-        def set_image_interpolation(self, val: str):
-            """
-            Set the current image interpolation used for rendering views of
-            images. Supported options are 'antialiased', 'nearest', 'bilinear',
-            'bicubic', 'spline16', 'spline36', 'hanning', 'hamming',
-            'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel',
-            'mitchell', 'sinc', 'lanczos', or 'none'. The default value is
-            'nearest'.
-
-            Parameters
-            ----------
-            val: string
-                A new image interpolation mode.
-            """
-            self.__image_interpolation = val
+        def __getstate__(self):
+            state = super().__getstate__()
+            state["__renderer"] = None
+            return state
 
         def get_max_render_depth(self) -> int:
             """
@@ -333,121 +283,41 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 raise ValueError(f"Render depth must be positive, not {val}.")
             self.__max_render_depth = val
 
-        def get_linescaling(self) -> bool:
+        @property
+        def view_specifications(self) -> Dict[Axes, ViewSpecification]:
             """
-            Get if line width scaling is enabled.
+            Get the current view specifications of this view axes.
 
             Returns
             -------
-            bool
-                If line width scaling is enabled returns True, otherwise False.
+            Dict[Axes, ViewSpecification]
+                A dictionary of Axes to ViewSpecification objects, listing
+                all the axes this view looks at and the settings for each
+                viewing.
             """
-            return self.__scale_lines
-
-        def set_linescaling(self, value: bool):
-            """
-            Set whether line widths should be scaled when rendering a view of
-            an axes.
-
-            Parameters
-            ----------
-            value: bool
-                If true, scale line widths in the view to match zoom level.
-                Otherwise don't.
-            """
-            self.__scale_lines = value
-
-        def get_filter_function(self) -> Optional[Callable[[Artist], bool]]:
-            """
-            Get the current artist filtering function.
-
-            Returns
-            -------
-            function, optional
-                The filter function, which accepts an artist and returns true
-                if it should be drawn, otherwise false. Can also be none,
-                meaning all artists should be drawn from the other axes.
-            """
-            return self.__filter_function
-
-        def set_filter_function(self, f: Optional[Callable[[Artist], bool]]):
-            """
-            Set the artist filtering function.
-
-            Returns
-            -------
-            f: function, optional
-                A filter function, which accepts an artist and returns true
-                if it should be drawn, otherwise false. Can also be set to
-                None, meaning all artists should be drawn from the other axes.
-            """
-            self.__filter_function = f
-
-        def __reduce__(self):
-            builder, args = super().__reduce__()[:2]
-
-            if(self.__new__ == builder):
-                builder = super().__new__()
-
-            cls = type(self)
-            args = tuple(
-                arg if(arg != cls) else cls.__bases__[0] for arg in args
-            )
-
-            return (
-                _view_from_pickle,
-                (builder, args),
-                self.__getstate__()
-            )
-
-        def __getstate__(self):
-            state = super().__getstate__()
-            state["__renderer"] = None
-            # We don't support pickling the filter...
-            state["__filter_function"] = None
-            return state
+            return self.__view_specs
 
         @classmethod
         def from_axes(
             cls,
             axes: Axes,
-            axes_to_view: Axes,
-            image_interpolation: str = "nearest",
-            render_depth: int = DEFAULT_RENDER_DEPTH,
-            filter_function: Optional[Callable[[Artist], bool]] = None
+            render_depth: int = DEFAULT_RENDER_DEPTH
         ) -> Axes:
             """
             Convert an Axes into a View in-place. This is used by public
             APIs to construct views, and using this method directly
-            is not recommended. Instead use `view` which resolves types
-            automatically.
+            is not recommended. Instead, use `view` which resolves types
+            and settings automatically.
 
             Parameters
             ----------
             axes: Axes
                 The axes to convert to a view wrapping the same axes type.
 
-            axes_to_view: `~.axes.Axes`
-                The axes to create a view of.
-
-            image_interpolation: string
-                Supported options are 'antialiased', 'nearest', 'bilinear',
-                'bicubic', 'spline16', 'spline36', 'hanning', 'hamming',
-                'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel',
-                'mitchell', 'sinc', 'lanczos', or 'none'. The default value is
-                'nearest'. This determines the interpolation used when
-                attempting to render a view of an image.
-
             render_depth: int, positive, defaults to 10
                 The number of recursive draws allowed for this view, this can
                 happen if the view is a child of the axes (such as an inset
                 axes) or if two views point at each other. Defaults to 10.
-
-            filter_function: callable(Artist) -> bool or None
-                An optional filter function, which can be used to select what
-                artists are drawn by the view. If the function returns True,
-                the element is drawn, otherwise it isn't. Defaults to None,
-                or drawing all artists.
 
             Returns
             -------
@@ -466,11 +336,11 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                     f"Can't convert {type(axes).__name__} to {cls.__name__}"
                 )
 
+            if(isinstance(axes, cls)):
+                return axes
+
             axes.__class__ = cls
-            axes._init_vars(
-                axes_to_view, image_interpolation,
-                render_depth, filter_function
-            )
+            axes._init_vars(render_depth)
             return axes
 
     View.__name__ = f"{View.__name__}[{axes_class.__name__}]"

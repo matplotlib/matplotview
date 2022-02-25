@@ -1,14 +1,17 @@
-from typing import Callable, Optional, Iterable
+from typing import Optional, Iterable, Type, Union
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
-from matplotview._view_axes import view_wrapper, DEFAULT_RENDER_DEPTH
+from matplotview._view_axes import view_wrapper, ViewSpecification, DEFAULT_RENDER_DEPTH
+
+__all__ = ["view", "inset_zoom_axes"]
 
 def view(
     axes: Axes,
     axes_to_view: Axes,
     image_interpolation: str = "nearest",
     render_depth: int = DEFAULT_RENDER_DEPTH,
-    filter_function: Optional[Callable[[Artist], bool]] = None
+    filter_set: Optional[Iterable[Union[Type[Artist], Artist]]] = None,
+    scale_lines: bool = True
 ) -> Axes:
     """
     Convert an axes into a view of another axes, displaying the contents of
@@ -36,15 +39,21 @@ def view(
         if the view is a child of the axes (such as an inset axes) or if
         two views point at each other. Defaults to 5.
 
-    filter_function: callable(Artist) -> bool or None
-        An optional filter function, which can be used to select what artists
-        are drawn by the view. If the function returns True, the element is
-        drawn, otherwise it isn't. Defaults to None, or drawing all artists.
+    filter_set: Iterable[Union[Type[Artist], Artist]] or None
+        An optional filter set, which can be used to select what artists
+        are drawn by the view. Any artists types in the set are not drawn.
+
+    scale_lines: bool, defaults to True
+        Specifies if lines should be drawn thicker based on scaling in the
+        view.
     """
-    return view_wrapper(type(axes)).from_axes(
-        axes, axes_to_view, image_interpolation,
-        render_depth, filter_function
+    view_obj = view_wrapper(type(axes)).from_axes(axes, render_depth)
+    view_obj.view_specifications[axes_to_view] = ViewSpecification(
+        image_interpolation,
+        filter_set,
+        scale_lines
     )
+    return view_obj
 
 
 def inset_zoom_axes(
@@ -53,7 +62,8 @@ def inset_zoom_axes(
     *,
     image_interpolation="nearest",
     render_depth: int = DEFAULT_RENDER_DEPTH,
-    filter_function: Optional[Callable[[Artist], bool]] = None,
+    filter_set: Optional[Iterable[Union[Type[Artist], Artist]]] = None,
+    scale_lines: bool = True,
     transform=None,
     zorder=5,
     **kwargs
@@ -92,10 +102,13 @@ def inset_zoom_axes(
         if the view is a child of the axes (such as an inset axes) or if
         two views point at each other. Defaults to 5.
 
-    filter_function: callable(Artist) -> bool or None
-        An optional filter function, which can be used to select what artists
-        are drawn by the view. If the function returns True, the element is
-        drawn, otherwise it isn't. Defaults to None, or drawing all artists.
+    filter_set: Iterable[Union[Type[Artist], Artist]] or None
+        An optional filter set, which can be used to select what artists
+        are drawn by the view. Any artists types in the set are not drawn.
+
+    scale_lines: bool, defaults to True
+        Specifies if lines should be drawn thicker based on scaling in the
+        view.
 
     **kwargs
         Other keyword arguments are passed on to the child `.Axes`.
@@ -114,5 +127,5 @@ def inset_zoom_axes(
     )
     return view(
         inset_ax, axes, image_interpolation,
-        render_depth, filter_function
+        render_depth, filter_set, scale_lines
     )

@@ -49,8 +49,8 @@ def test_auto_zoom_inset(fig_test, fig_ref):
     ax_test.add_patch(plt.Circle((3, 3), 1, ec="black", fc="blue"))
     ax_test.imshow(im_data, origin="lower", cmap="Blues", alpha=0.5,
                    interpolation="nearest")
-    axins_test = inset_zoom_axes(ax_test, [0.5, 0.5, 0.48, 0.48])
-    axins_test.set_linescaling(False)
+    axins_test = inset_zoom_axes(ax_test, [0.5, 0.5, 0.48, 0.48],
+                                 scale_lines=False)
     axins_test.set_xlim(1, 5)
     axins_test.set_ylim(1, 5)
     ax_test.indicate_inset_zoom(axins_test, edgecolor="black")
@@ -81,8 +81,8 @@ def test_plotting_in_view(fig_test, fig_ref):
     ax_test = fig_test.gca()
     ax_test.imshow(im_data, origin="lower", cmap="Blues", alpha=0.5,
                    interpolation="nearest")
-    axins_test = inset_zoom_axes(ax_test, [0.5, 0.5, 0.48, 0.48])
-    axins_test.set_linescaling(False)
+    axins_test = inset_zoom_axes(ax_test, [0.5, 0.5, 0.48, 0.48],
+                                 scale_lines=False)
     axins_test.set_xlim(1, 5)
     axins_test.set_ylim(1, 5)
     axins_test.annotate(
@@ -146,8 +146,7 @@ def test_polar_view(fig_test, fig_ref):
     ax_t1, ax_t2 = fig_test.subplots(1, 2, subplot_kw=dict(projection="polar"))
     ax_t1.plot(theta, r)
     ax_t1.set_rmax(2)
-    view(ax_t2, ax_t1)
-    ax_t2.set_linescaling(False)
+    view(ax_t2, ax_t1, scale_lines=False)
     ax_t2.set_rmax(1)
 
     # Reference...
@@ -172,7 +171,6 @@ def test_map_projection_view(fig_test, fig_ref):
     ax_t1.plot(x, y)
     ax_t1.add_patch(circ_gen())
     view(ax_t2, ax_t1)
-    #ax_t2.set_linescaling(False)
 
     # Reference...
     ax_r1 = fig_ref.add_subplot(1, 2, 1, projection="hammer")
