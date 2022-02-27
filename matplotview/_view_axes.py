@@ -1,6 +1,6 @@
 import functools
 import itertools
-from typing import Type, List, Optional, Callable, Any, Set, Dict, Union
+from typing import Type, List, Optional, Any, Set, Dict, Union
 from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
 import matplotlib.docstring as docstring
@@ -10,6 +10,7 @@ from matplotlib.backend_bases import RendererBase
 from dataclasses import dataclass
 
 DEFAULT_RENDER_DEPTH = 5
+
 
 class _BoundRendererArtist:
     """
@@ -85,6 +86,7 @@ class _BoundRendererArtist:
 
         return res
 
+
 def _view_from_pickle(builder, args):
     """
     PRIVATE: Construct a View wrapper axes given an axes builder and class.
@@ -106,12 +108,14 @@ class ViewSpecification:
             self.filter_set = set(self.filter_set)
         self.scale_lines = bool(self.scale_lines)
 
+
 class __ViewType:
     """
     PRIVATE: A simple identifier class for identifying view types, a view
     will inherit from the axes class it is wrapping and this type...
     """
     ...
+
 
 # Cache classes so grabbing the same type twice leads to actually getting the
 # same type (and type comparisons work).
@@ -201,6 +205,14 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             # renderer, and therefore to the correct location.
             child_list = super().get_children()
 
+            def filter_check(artist, filter_set):
+                if(filter_set is None):
+                    return True
+                return (
+                    (artist not in filter_set)
+                    and (type(artist) not in filter_set)
+                )
+
             if(self.__renderer is not None):
                 for ax, spec in self.view_specifications.items():
                     mock_renderer = _TransformRenderer(
@@ -219,11 +231,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                         for a in itertools.chain(
                             ax._children,
                             ax.child_axes
-                        ) if(
-                                (spec.filter_set is None)
-                                or ((a not in spec.filter_set)
-                                and (type(a) not in spec.filter_set))
-                        )
+                        ) if(filter_check(a, spec.filter_set))
                     ])
 
             return child_list

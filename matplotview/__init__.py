@@ -1,9 +1,11 @@
 from typing import Optional, Iterable, Type, Union
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
-from matplotview._view_axes import view_wrapper, ViewSpecification, DEFAULT_RENDER_DEPTH
+from matplotview._view_axes import view_wrapper, ViewSpecification
+
 
 __all__ = ["view", "inset_zoom_axes", "ViewSpecification"]
+
 
 def view(
     axes: Axes,
@@ -67,7 +69,7 @@ def inset_zoom_axes(
     render_depth: Optional[int] = None,
     filter_set: Optional[Iterable[Union[Type[Artist], Artist]]] = None,
     scale_lines: bool = True,
-    transform = None,
+    transform=None,
     zorder: int = 5,
     **kwargs
 ) -> Axes:

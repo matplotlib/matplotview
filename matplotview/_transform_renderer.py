@@ -234,7 +234,7 @@ class _TransformRenderer(RendererBase):
                                               IdentityTransform())
 
     # Images prove to be especially messy to deal with...
-    def draw_image(self, gc, x, y, im, transform = None):
+    def draw_image(self, gc, x, y, im, transform=None):
         mag = self.get_image_magnification()
         shift_data_transform = self._get_transfer_transform(
             IdentityTransform()
@@ -292,4 +292,3 @@ class _TransformRenderer(RendererBase):
             self.__renderer.draw_image(gc, x, y, out_arr, None)
         else:
             self.__renderer.draw_image(gc, x, y, out_arr)
-

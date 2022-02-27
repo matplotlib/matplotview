@@ -1,5 +1,3 @@
-import functools
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -23,7 +21,7 @@ def matches_post_pickle(figure):
     return np.all(img_expected == img_result)
 
 
-def plotting_test(num_figs = 1, *args, **kwargs):
+def plotting_test(num_figs=1, *args, **kwargs):
     def plotting_decorator(function):
         def test_plotting():
             plt.close("all")
@@ -36,6 +34,3 @@ def plotting_test(num_figs = 1, *args, **kwargs):
         return test_plotting
 
     return plotting_decorator
-
-
-

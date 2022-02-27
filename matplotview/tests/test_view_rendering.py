@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.testing.decorators import check_figures_equal
 from matplotview import view, inset_zoom_axes
 
+
 @check_figures_equal(tol=6)
 def test_double_plot(fig_test, fig_ref):
     np.random.seed(1)
@@ -15,7 +16,7 @@ def test_double_plot(fig_test, fig_ref):
     ax_test1.add_patch(plt.Circle((3, 3), 1, ec="black", fc="blue"))
     ax_test1.text(10, 10, "Hello World!", size=14)
     ax_test1.imshow(im_data, origin="lower", cmap="Blues", alpha=0.5,
-                   interpolation="nearest")
+                    interpolation="nearest")
     ax_test2 = view(ax_test2, ax_test1)
     ax_test2.set_aspect(ax_test1.get_aspect())
     ax_test2.set_xlim(ax_test1.get_xlim())
@@ -161,7 +162,9 @@ def test_polar_view(fig_test, fig_ref):
 def test_map_projection_view(fig_test, fig_ref):
     x = np.linspace(-2.5, 2.5, 20)
     y = np.linspace(-1, 1, 20)
-    circ_gen = lambda: plt.Circle((1.5, 0.25), 0.7, ec="black", fc="blue")
+
+    def circ_gen():
+        return plt.Circle((1.5, 0.25), 0.7, ec="black", fc="blue")
 
     # Test case...
     ax_t1 = fig_test.add_subplot(1, 2, 1, projection="hammer")
