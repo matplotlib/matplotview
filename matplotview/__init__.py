@@ -111,7 +111,8 @@ def inset_zoom_axes(
 
     filter_set: Iterable[Union[Type[Artist], Artist]] or None
         An optional filter set, which can be used to select what artists
-        are drawn by the view. Any artists types in the set are not drawn.
+        are drawn by the view. Any artists or artist types in the set are not
+        drawn.
 
     scale_lines: bool, defaults to True
         Specifies if lines should be drawn thicker based on scaling in the

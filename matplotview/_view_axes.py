@@ -98,6 +98,29 @@ def _view_from_pickle(builder, args):
 
 @dataclass
 class ViewSpecification:
+    """
+    A view specification, or a mutable dataclass containing configuration
+    options for a view's "viewing" of a different axes.
+
+    Parameters:
+    -----------
+    image_interpolation: string
+        Supported options are 'antialiased', 'nearest', 'bilinear',
+        'bicubic', 'spline16', 'spline36', 'hanning', 'hamming', 'hermite',
+        'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell',
+        'sinc', 'lanczos', or 'none'. The default value is 'nearest'. This
+        determines the interpolation used when attempting to render a
+        zoomed version of an image.
+
+    filter_set: Iterable[Union[Type[Artist], Artist]] or None
+        An optional filter set, which can be used to select what artists
+        are drawn by the view. Any artists or artist types in the set are not
+        drawn.
+
+    scale_lines: bool, defaults to True
+        Specifies if lines should be drawn thicker based on scaling in the
+        view.
+    """
     image_interpolation: str = "nearest"
     filter_set: Optional[Set[Union[Type[Artist], Artist]]] = None
     scale_lines: bool = True
