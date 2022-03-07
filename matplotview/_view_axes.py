@@ -15,9 +15,9 @@ DEFAULT_RENDER_DEPTH = 5
 class _BoundRendererArtist:
     """
     Provides a temporary wrapper around a given artist, inheriting its
-    attributes and values, while overloading draw to use a fixed
+    attributes and values, while overriding the draw method to use a fixed
     TransformRenderer. This is used to render an artist to a view without
-    having to implement a new draw for every Axes type.
+    having to implement a new draw method for every Axes type.
     """
     def __init__(
         self,
@@ -146,8 +146,8 @@ class __ViewType:
 def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
     """
     Construct a View axes, which subclasses, or wraps a specific Axes subclass.
-    A View axes can be configured to display the contents of another Axes
-    within the same Figure.
+    A View axes can be configured to display the contents of other Axes
+    (plural) within the same Figure.
 
     Parameters
     ----------
@@ -160,6 +160,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         The view axes wrapper for a given axes class, capable of displaying
         another axes contents...
     """
+    # If the passed class is a view, simply return it.
     if(issubclass(axes_class, Axes) and issubclass(axes_class, __ViewType)):
         return axes_class
 
