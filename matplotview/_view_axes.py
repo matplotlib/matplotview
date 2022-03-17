@@ -280,10 +280,8 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         def __reduce__(self):
             builder, args = super().__reduce__()[:2]
 
-            if(self.__new__ == builder):
-                builder = super().__new__()
-
             cls = type(self)
+
             args = tuple(
                 arg if(arg != cls) else cls.__bases__[0] for arg in args
             )
