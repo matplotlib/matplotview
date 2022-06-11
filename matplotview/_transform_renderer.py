@@ -6,6 +6,7 @@ from matplotlib.path import Path
 import matplotlib._image as _image
 import numpy as np
 from matplotlib.image import _interpd_
+from matplotview._docs import dynamic_doc_string, get_interpolation_list_str
 
 
 class _TransformRenderer(RendererBase):
@@ -15,6 +16,7 @@ class _TransformRenderer(RendererBase):
     original renderer.
     """
 
+    @dynamic_doc_string(interp_list=get_interpolation_list_str())
     def __init__(
         self,
         base_renderer,
@@ -42,7 +44,7 @@ class _TransformRenderer(RendererBase):
 
         transform: `~matplotlib.transforms.Transform`
             The main transform to be used for plotting all objects once
-            converted into the mock_transform coordinate space. Typically this
+            converted into the mock_transform coordinate space. Typically, this
             is the child axes data coordinate space (transData).
 
         bounding_axes: `~matplotlib.axes.Axes`
@@ -50,14 +52,11 @@ class _TransformRenderer(RendererBase):
             axes will be clipped.
 
         image_interpolation: string
-            Supported options are 'antialiased', 'nearest', 'bilinear',
-            'bicubic', 'spline16', 'spline36', 'hanning', 'hamming', 'hermite',
-            'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell',
-            'sinc', 'lanczos', or 'none'. The default value is 'nearest'. This
+            Supported options are {interp_list}. The default value is '{image_interpolation}'. This
             determines the interpolation used when attempting to render a
             zoomed version of an image.
 
-        scale_linewidths: bool, default is True
+        scale_linewidths: bool, default is {scale_linewidths}
             Specifies if line widths should be scaled, in addition to the
             paths themselves.
 

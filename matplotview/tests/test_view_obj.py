@@ -5,7 +5,6 @@ from matplotview import view, inset_zoom_axes, ViewSpecification
 from matplotview._view_axes import DEFAULT_RENDER_DEPTH, view_wrapper
 import numpy as np
 
-
 def test_obj_comparison():
     from matplotlib.axes import Subplot, Axes
 

@@ -8,6 +8,7 @@ from matplotview._transform_renderer import _TransformRenderer
 from matplotlib.artist import Artist
 from matplotlib.backend_bases import RendererBase
 from dataclasses import dataclass
+from matplotview._docs import dynamic_doc_string, get_interpolation_list_str
 
 DEFAULT_RENDER_DEPTH = 5
 
@@ -96,6 +97,7 @@ def _view_from_pickle(builder, args):
     return res
 
 
+@dynamic_doc_string(render_depth=DEFAULT_RENDER_DEPTH, interp_list=get_interpolation_list_str())
 @dataclass
 class ViewSpecification:
     """
@@ -105,19 +107,16 @@ class ViewSpecification:
     Parameters:
     -----------
     image_interpolation: string
-        Supported options are 'antialiased', 'nearest', 'bilinear',
-        'bicubic', 'spline16', 'spline36', 'hanning', 'hamming', 'hermite',
-        'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell',
-        'sinc', 'lanczos', or 'none'. The default value is 'nearest'. This
+        Supported options are {interp_list}. The default value is '{image_interpolation}'. This
         determines the interpolation used when attempting to render a
         zoomed version of an image.
 
-    filter_set: Iterable[Union[Type[Artist], Artist]] or None
+    filter_set: Iterable[Union[Type[Artist], Artist]] or {filter_set}
         An optional filter set, which can be used to select what artists
         are drawn by the view. Any artists or artist types in the set are not
         drawn.
 
-    scale_lines: bool, defaults to True
+    scale_lines: bool, defaults to {scale_lines}
         Specifies if lines should be drawn thicker based on scaling in the
         view.
     """
@@ -170,6 +169,8 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         An axes which automatically displays elements of another axes. Does not
         require Artists to be plotted twice.
         """
+
+        @dynamic_doc_string()
         def __init__(
             self,
             *args,
@@ -181,17 +182,14 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
 
             Parameters
             ----------
-            axes_to_view: `~.axes.Axes`
-                The axes to create a view of.
-
             *args
                 Additional arguments to be passed to the Axes class this
                 ViewAxes wraps.
 
-            render_depth: int, positive, defaults to 5
+            render_depth: int, positive, defaults to {render_depth}
                 The number of recursive draws allowed for this view, this can
                 happen if the view is a child of the axes (such as an inset
-                axes) or if two views point at each other. Defaults to 5.
+                axes) or if two views point at each other. Defaults to {render_depth}.
 
             **kwargs
                 Other optional keyword arguments supported by the Axes
@@ -342,6 +340,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         view_specs = view_specifications
 
         @classmethod
+        @dynamic_doc_string(render_depth=DEFAULT_RENDER_DEPTH)
         def from_axes(
             cls,
             axes: Axes,
@@ -362,7 +361,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 The number of recursive draws allowed for this view, this can
                 happen if the view is a child of the axes (such as an inset
                 axes) or if two views point at each other. If none, use the
-                default value (5) if the render depth is not already set.
+                default value ({render_depth}) if the render depth is not already set.
 
             Returns
             -------

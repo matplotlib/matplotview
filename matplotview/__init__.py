@@ -1,12 +1,14 @@
 from typing import Optional, Iterable, Type, Union
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
-from matplotview._view_axes import view_wrapper, ViewSpecification
+from matplotview._view_axes import view_wrapper, ViewSpecification, DEFAULT_RENDER_DEPTH
+from matplotview._docs import dynamic_doc_string, get_interpolation_list_str
 
 
 __all__ = ["view", "inset_zoom_axes", "ViewSpecification"]
 
 
+@dynamic_doc_string(render_depth=DEFAULT_RENDER_DEPTH, interp_list=get_interpolation_list_str())
 def view(
     axes: Axes,
     axes_to_view: Axes,
@@ -28,19 +30,16 @@ def view(
         The axes to display the contents of in the first axes, the 'viewed'
         axes.
 
-    image_interpolation: string, default of "nearest"
+    image_interpolation: string, default of '{image_interpolation}'
         The image interpolation method to use when displaying scaled images
-        from the axes being viewed. Defaults to "nearest". Supported options
-        are 'antialiased', 'nearest', 'bilinear', 'bicubic', 'spline16',
-        'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric',
-        'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos',
-        or 'none'
+        from the axes being viewed. Defaults to '{image_interpolation}'. Supported options
+        are {interp_list}.
 
     render_depth: optional int, positive, defaults to None
         The number of recursive draws allowed for this view, this can happen
         if the view is a child of the axes (such as an inset axes) or if
         two views point at each other. If None, uses the default render depth
-        of 5, unless the axes passed is already a view axes, in which case the
+        of {render_depth}, unless the axes passed is already a view axes, in which case the
         render depth the view already has will be used.
 
     filter_set: Iterable[Union[Type[Artist], Artist]] or None
@@ -48,9 +47,14 @@ def view(
         are drawn by the view. Any artists or artist types in the set are not
         drawn.
 
-    scale_lines: bool, defaults to True
+    scale_lines: bool, defaults to {scale_lines}
         Specifies if lines should be drawn thicker based on scaling in the
         view.
+
+    Returns
+    -------
+    axes
+        The modified `~.axes.Axes` instance which is now a view.
     """
     view_obj = view_wrapper(type(axes)).from_axes(axes, render_depth)
     view_obj.view_specifications[axes_to_view] = ViewSpecification(
@@ -61,6 +65,7 @@ def view(
     return view_obj
 
 
+@dynamic_doc_string(render_depth=DEFAULT_RENDER_DEPTH, interp_list=get_interpolation_list_str())
 def inset_zoom_axes(
     axes: Axes,
     bounds: Iterable,
@@ -69,7 +74,7 @@ def inset_zoom_axes(
     render_depth: Optional[int] = None,
     filter_set: Optional[Iterable[Union[Type[Artist], Artist]]] = None,
     scale_lines: bool = True,
-    transform=None,
+    transform = None,
     zorder: int = 5,
     **kwargs
 ) -> Axes:
@@ -90,15 +95,12 @@ def inset_zoom_axes(
         Axes-relative coordinates.
 
     zorder: number
-        Defaults to 5 (same as `.Axes.legend`).  Adjust higher or lower
+        Defaults to {zorder} (same as `.Axes.legend`).  Adjust higher or lower
         to change whether it is above or below data plotted on the
         parent Axes.
 
     image_interpolation: string
-        Supported options are 'antialiased', 'nearest', 'bilinear',
-        'bicubic', 'spline16', 'spline36', 'hanning', 'hamming', 'hermite',
-        'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell',
-        'sinc', 'lanczos', or 'none'. The default value is 'nearest'. This
+        Supported options are {interp_list}. The default value is '{image_interpolation}'. This
         determines the interpolation used when attempting to render a
         zoomed version of an image.
 
@@ -106,7 +108,7 @@ def inset_zoom_axes(
         The number of recursive draws allowed for this view, this can happen
         if the view is a child of the axes (such as an inset axes) or if
         two views point at each other. If None, uses the default render depth
-        of 5, unless the axes passed is already a view axes, in which case the
+        of {render_depth}, unless the axes passed is already a view axes, in which case the
         render depth the view already has will be used.
 
     filter_set: Iterable[Union[Type[Artist], Artist]] or None
@@ -114,7 +116,7 @@ def inset_zoom_axes(
         are drawn by the view. Any artists or artist types in the set are not
         drawn.
 
-    scale_lines: bool, defaults to True
+    scale_lines: bool, defaults to {scale_lines}
         Specifies if lines should be drawn thicker based on scaling in the
         view.
 
