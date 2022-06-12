@@ -25,40 +25,8 @@ jobs:
             sudo apt-get update -yy
             sudo apt-get install -yy \
               ccache \
-              cm-super \
-              dvipng \
-              ffmpeg \
-              fonts-noto-cjk \
-              gdb \
-              gir1.2-gtk-3.0 \
-              graphviz \
               inkscape \
-              lcov \
-              libcairo2 \
-              libcairo2-dev \
-              libffi-dev \
-              libgeos-dev \
-              libgirepository1.0-dev \
-              libsdl2-2.0-0 \
-              libxkbcommon-x11-0 \
-              libxcb-icccm4 \
-              libxcb-image0 \
-              libxcb-keysyms1 \
-              libxcb-randr0 \
-              libxcb-render-util0 \
-              libxcb-xinerama0 \
-              lmodern \
-              fonts-freefont-otf \
-              texlive-pictures \
-              pkg-config \
-              qtbase5-dev \
-              texlive-fonts-recommended \
-              texlive-latex-base \
-              texlive-latex-extra \
-              texlive-latex-recommended \
-              texlive-luatex \
-              texlive-xetex \
-              ttf-wqy-zenhei
+              ghostscript
             if [[ "${{ matrix.os }}" = ubuntu-20.04 ]]; then
               sudo apt install -yy libopengl0
             fi
