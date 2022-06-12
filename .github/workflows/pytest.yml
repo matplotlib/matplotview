@@ -1,7 +1,14 @@
 
 name: Validate Python Code
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
 
 jobs:
   test-mac-linux:
