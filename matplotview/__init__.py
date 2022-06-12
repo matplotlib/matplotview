@@ -1,14 +1,22 @@
 from typing import Optional, Iterable, Type, Union
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
-from matplotview._view_axes import view_wrapper, ViewSpecification, DEFAULT_RENDER_DEPTH
+from matplotlib.transforms import Transform
+from matplotview._view_axes import (
+    view_wrapper,
+    ViewSpecification,
+    DEFAULT_RENDER_DEPTH
+)
 from matplotview._docs import dynamic_doc_string, get_interpolation_list_str
 
 
 __all__ = ["view", "inset_zoom_axes", "ViewSpecification"]
 
 
-@dynamic_doc_string(render_depth=DEFAULT_RENDER_DEPTH, interp_list=get_interpolation_list_str())
+@dynamic_doc_string(
+    render_depth=DEFAULT_RENDER_DEPTH,
+    interp_list=get_interpolation_list_str()
+)
 def view(
     axes: Axes,
     axes_to_view: Axes,
@@ -32,15 +40,15 @@ def view(
 
     image_interpolation: string, default of '{image_interpolation}'
         The image interpolation method to use when displaying scaled images
-        from the axes being viewed. Defaults to '{image_interpolation}'. Supported options
-        are {interp_list}.
+        from the axes being viewed. Defaults to '{image_interpolation}'.
+        Supported options are {interp_list}.
 
     render_depth: optional int, positive, defaults to None
         The number of recursive draws allowed for this view, this can happen
         if the view is a child of the axes (such as an inset axes) or if
         two views point at each other. If None, uses the default render depth
-        of {render_depth}, unless the axes passed is already a view axes, in which case the
-        render depth the view already has will be used.
+        of {render_depth}, unless the axes passed is already a view axes, in
+        which case the render depth the view already has will be used.
 
     filter_set: Iterable[Union[Type[Artist], Artist]] or None
         An optional filter set, which can be used to select what artists
@@ -65,7 +73,10 @@ def view(
     return view_obj
 
 
-@dynamic_doc_string(render_depth=DEFAULT_RENDER_DEPTH, interp_list=get_interpolation_list_str())
+@dynamic_doc_string(
+    render_depth=DEFAULT_RENDER_DEPTH,
+    interp_list=get_interpolation_list_str()
+)
 def inset_zoom_axes(
     axes: Axes,
     bounds: Iterable,
@@ -74,7 +85,7 @@ def inset_zoom_axes(
     render_depth: Optional[int] = None,
     filter_set: Optional[Iterable[Union[Type[Artist], Artist]]] = None,
     scale_lines: bool = True,
-    transform = None,
+    transform: Transform = None,
     zorder: int = 5,
     **kwargs
 ) -> Axes:
@@ -100,16 +111,16 @@ def inset_zoom_axes(
         parent Axes.
 
     image_interpolation: string
-        Supported options are {interp_list}. The default value is '{image_interpolation}'. This
-        determines the interpolation used when attempting to render a
-        zoomed version of an image.
+        Supported options are {interp_list}. The default value is
+        '{image_interpolation}'. This determines the interpolation
+        used when attempting to render a zoomed version of an image.
 
     render_depth: optional int, positive, defaults to None
         The number of recursive draws allowed for this view, this can happen
         if the view is a child of the axes (such as an inset axes) or if
         two views point at each other. If None, uses the default render depth
-        of {render_depth}, unless the axes passed is already a view axes, in which case the
-        render depth the view already has will be used.
+        of {render_depth}, unless the axes passed is already a view axes,
+        in which case the render depth the view already has will be used.
 
     filter_set: Iterable[Union[Type[Artist], Artist]] or None
         An optional filter set, which can be used to select what artists

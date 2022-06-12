@@ -97,7 +97,10 @@ def _view_from_pickle(builder, args):
     return res
 
 
-@dynamic_doc_string(render_depth=DEFAULT_RENDER_DEPTH, interp_list=get_interpolation_list_str())
+@dynamic_doc_string(
+    render_depth=DEFAULT_RENDER_DEPTH,
+    interp_list=get_interpolation_list_str()
+)
 @dataclass
 class ViewSpecification:
     """
@@ -107,9 +110,9 @@ class ViewSpecification:
     Parameters:
     -----------
     image_interpolation: string
-        Supported options are {interp_list}. The default value is '{image_interpolation}'. This
-        determines the interpolation used when attempting to render a
-        zoomed version of an image.
+        Supported options are {interp_list}. The default value is
+        '{image_interpolation}'. This determines the interpolation
+        used when attempting to render a zoomed version of an image.
 
     filter_set: Iterable[Union[Type[Artist], Artist]] or {filter_set}
         An optional filter set, which can be used to select what artists
@@ -189,7 +192,8 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             render_depth: int, positive, defaults to {render_depth}
                 The number of recursive draws allowed for this view, this can
                 happen if the view is a child of the axes (such as an inset
-                axes) or if two views point at each other. Defaults to {render_depth}.
+                axes) or if two views point at each other. Defaults to
+                {render_depth}.
 
             **kwargs
                 Other optional keyword arguments supported by the Axes
@@ -361,7 +365,8 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 The number of recursive draws allowed for this view, this can
                 happen if the view is a child of the axes (such as an inset
                 axes) or if two views point at each other. If none, use the
-                default value ({render_depth}) if the render depth is not already set.
+                default value ({render_depth}) if the render depth is not
+                already set.
 
             Returns
             -------

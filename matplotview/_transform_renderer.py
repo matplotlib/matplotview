@@ -52,9 +52,9 @@ class _TransformRenderer(RendererBase):
             axes will be clipped.
 
         image_interpolation: string
-            Supported options are {interp_list}. The default value is '{image_interpolation}'. This
-            determines the interpolation used when attempting to render a
-            zoomed version of an image.
+            Supported options are {interp_list}. The default value is
+            '{image_interpolation}'. This determines the interpolation
+            used when attempting to render a zoomed version of an image.
 
         scale_linewidths: bool, default is {scale_linewidths}
             Specifies if line widths should be scaled, in addition to the
