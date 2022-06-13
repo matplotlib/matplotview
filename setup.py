@@ -32,7 +32,8 @@ setuptools.setup(
     ],
     license="PSF",
     install_requires=[
-        "matplotlib>=3.5.1"
+        "matplotlib>=3.5.1",
+        "numpy"
     ],
     packages=["matplotview"],
     python_requires=">=3.7",
