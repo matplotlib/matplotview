@@ -12,7 +12,12 @@ import numpy as np
 from matplotlib.image import _interpd_
 from matplotview._docs import dynamic_doc_string, get_interpolation_list_str
 
-ColorTup = Union[None, Tuple[float, float, float, float], Tuple[float, float, float]]
+ColorTup = Union[
+    None,
+    Tuple[float, float, float, float],
+    Tuple[float, float, float]
+]
+
 
 class _TransformRenderer(RendererBase):
     """
