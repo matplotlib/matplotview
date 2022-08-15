@@ -87,7 +87,7 @@ def stop_viewing(view: Axes, axes_of_viewing: Axes) -> Axes:
     Parameters
     ----------
     view: Axes
-        The axes the is currently viewing the axes_of_viewing...
+        The axes the is currently viewing the `axes_of_viewing`...
 
     axes_of_viewing: Axes
         The axes that the view should stop viewing.
@@ -100,7 +100,7 @@ def stop_viewing(view: Axes, axes_of_viewing: Axes) -> Axes:
     Raises
     ------
     AttributeError
-        If the provided axes_of_viewing is not actually being viewed by the specified view.
+        If the provided `axes_of_viewing` is not actually being viewed by the specified view.
 
     See Also
     --------
