@@ -10,7 +10,7 @@ from matplotview._view_axes import (
 from matplotview._docs import dynamic_doc_string, get_interpolation_list_str
 
 
-__all__ = ["view", "inset_zoom_axes", "ViewSpecification"]
+__all__ = ["view", "stop_viewing", "inset_zoom_axes"]
 
 
 @dynamic_doc_string(
@@ -27,7 +27,9 @@ def view(
 ) -> Axes:
     """
     Convert an axes into a view of another axes, displaying the contents of
-    the second axes.
+    the second axes. If this axes is already viewing the passed axes (This
+    function is called twice with the same axes arguments) this function
+    will update the settings of the viewing instead of creating a new view.
 
     Parameters
     ----------
@@ -63,6 +65,13 @@ def view(
     -------
     axes
         The modified `~.axes.Axes` instance which is now a view.
+        The modification occurs in-place.
+
+    See Also
+    --------
+    matplotview.stop_viewing: Delete or stop an already constructed view.
+    matplotview.inset_zoom_axes: Convenience method for creating inset axes
+                                 that are views of the parent axes.
     """
     view_obj = view_wrapper(type(axes)).from_axes(axes, render_depth)
     view_obj.view_specifications[axes_to_view] = ViewSpecification(
@@ -71,6 +80,38 @@ def view(
         scale_lines
     )
     return view_obj
+
+
+def stop_viewing(view: Axes, axes_of_viewing: Axes) -> Axes:
+    """
+    Terminate the viewing of a specified axes.
+
+    Parameters
+    ----------
+    view: Axes
+        The axes the is currently viewing the `axes_of_viewing`...
+
+    axes_of_viewing: Axes
+        The axes that the view should stop viewing.
+
+    Returns
+    -------
+    view
+        The view, which has now been modified in-place.
+
+    Raises
+    ------
+    AttributeError
+        If the provided `axes_of_viewing` is not actually being
+        viewed by the specified view.
+
+    See Also
+    --------
+    matplotview.view: To create views.
+    """
+    view = view_wrapper(type(view)).from_axes(view)
+    del view.view_specifications[axes_of_viewing]
+    return view
 
 
 @dynamic_doc_string(
@@ -139,9 +180,9 @@ def inset_zoom_axes(
     ax
         The created `~.axes.Axes` instance.
 
-    Examples
+    See Also
     --------
-    See `Axes.inset_axes` method for examples.
+    matplotview.view: For creating views in generalized cases.
     """
     inset_ax = axes.inset_axes(
         bounds, transform=transform, zorder=zorder, **kwargs

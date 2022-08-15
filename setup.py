@@ -1,6 +1,6 @@
 import setuptools
 
-VERSION = "0.2.0"
+VERSION = "1.0.0"
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -32,7 +32,8 @@ setuptools.setup(
     ],
     license="PSF",
     install_requires=[
-        "matplotlib>=3.5.1"
+        "matplotlib>=3.5.1",
+        "numpy"
     ],
     packages=["matplotview"],
     python_requires=">=3.7",

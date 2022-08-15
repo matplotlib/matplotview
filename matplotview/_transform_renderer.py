@@ -1,12 +1,22 @@
-from matplotlib.backend_bases import RendererBase
+from typing import Tuple, Union
+from matplotlib.axes import Axes
+from matplotlib.backend_bases import RendererBase, GraphicsContextBase
+from matplotlib.font_manager import FontProperties
 from matplotlib.patches import Rectangle
+from matplotlib.texmanager import TexManager
 from matplotlib.transforms import Bbox, IdentityTransform, Affine2D, \
-    TransformedPatchPath
+    TransformedPatchPath, Transform
 from matplotlib.path import Path
 import matplotlib._image as _image
 import numpy as np
 from matplotlib.image import _interpd_
 from matplotview._docs import dynamic_doc_string, get_interpolation_list_str
+
+ColorTup = Union[
+    None,
+    Tuple[float, float, float, float],
+    Tuple[float, float, float]
+]
 
 
 class _TransformRenderer(RendererBase):
@@ -19,12 +29,12 @@ class _TransformRenderer(RendererBase):
     @dynamic_doc_string(interp_list=get_interpolation_list_str())
     def __init__(
         self,
-        base_renderer,
-        mock_transform,
-        transform,
-        bounding_axes,
-        image_interpolation="nearest",
-        scale_linewidths=True
+        base_renderer: RendererBase,
+        mock_transform: Transform,
+        transform: Transform,
+        bounding_axes: Axes,
+        image_interpolation: str = "nearest",
+        scale_linewidths: bool = True
     ):
         """
         Constructs a new TransformRender.
@@ -80,10 +90,10 @@ class _TransformRenderer(RendererBase):
             )
 
     @property
-    def bounding_axes(self):
+    def bounding_axes(self) -> Axes:
         return self.__bounding_axes
 
-    def _scale_gc(self, gc):
+    def _scale_gc(self, gc: GraphicsContextBase) -> GraphicsContextBase:
         with np.errstate(all='ignore'):
             transfer_transform = self._get_transfer_transform(
                 IdentityTransform()
@@ -103,14 +113,14 @@ class _TransformRenderer(RendererBase):
 
             return new_gc
 
-    def _get_axes_display_box(self):
+    def _get_axes_display_box(self) -> Bbox:
         """
         Private method, get the bounding box of the child axes in display
         coordinates.
         """
         return self.__bounding_axes.get_window_extent()
 
-    def _get_transfer_transform(self, orig_transform):
+    def _get_transfer_transform(self, orig_transform: Transform) -> Transform:
         """
         Private method, returns the transform which translates and scales
         coordinates as if they were originally plotted on the child axes
@@ -141,43 +151,63 @@ class _TransformRenderer(RendererBase):
     # We copy all of the properties of the renderer we are mocking, so that
     # artists plot themselves as if they were placed on the original renderer.
     @property
-    def height(self):
+    def height(self) -> int:
         return self.__renderer.get_canvas_width_height()[1]
 
     @property
-    def width(self):
+    def width(self) -> int:
         return self.__renderer.get_canvas_width_height()[0]
 
-    def get_text_width_height_descent(self, s, prop, ismath):
+    def get_text_width_height_descent(
+        self,
+        s: str,
+        prop: FontProperties,
+        ismath: bool
+    ) -> Tuple[float, float, float]:
         return self.__renderer.get_text_width_height_descent(s, prop, ismath)
 
-    def get_canvas_width_height(self):
+    def get_canvas_width_height(self) -> Tuple[float, float]:
         return self.__renderer.get_canvas_width_height()
 
-    def get_texmanager(self):
+    def get_texmanager(self) -> TexManager:
         return self.__renderer.get_texmanager()
 
-    def get_image_magnification(self):
+    def get_image_magnification(self) -> float:
         return self.__renderer.get_image_magnification()
 
-    def _get_text_path_transform(self, x, y, s, prop, angle, ismath):
-        return self.__renderer._get_text_path_transform(x, y, s, prop, angle,
-                                                        ismath)
+    def _get_text_path_transform(
+        self,
+        x: float,
+        y: float,
+        s: str,
+        prop: FontProperties,
+        angle: float,
+        ismath: bool
+    ) -> Transform:
+        return self.__renderer._get_text_path_transform(
+            x, y, s, prop, angle, ismath
+        )
 
-    def option_scale_image(self):
+    def option_scale_image(self) -> bool:
         return False
 
-    def points_to_pixels(self, points):
+    def points_to_pixels(self, points: float) -> float:
         return self.__renderer.points_to_pixels(points)
 
-    def flipy(self):
+    def flipy(self) -> bool:
         return self.__renderer.flipy()
 
-    def new_gc(self):
+    def new_gc(self) -> GraphicsContextBase:
         return self.__renderer.new_gc()
 
     # Actual drawing methods below:
-    def draw_path(self, gc, path, transform, rgbFace=None):
+    def draw_path(
+        self,
+        gc: GraphicsContextBase,
+        path: Path,
+        transform: Transform,
+        rgbFace: ColorTup = None
+    ):
         # Convert the path to display coordinates, but if it was originally
         # drawn on the child axes.
         path = path.deepcopy()
@@ -203,7 +233,16 @@ class _TransformRenderer(RendererBase):
 
         self.__renderer.draw_path(gc, path, IdentityTransform(), rgbFace)
 
-    def _draw_text_as_path(self, gc, x, y, s, prop, angle, ismath):
+    def _draw_text_as_path(
+        self,
+        gc: GraphicsContextBase,
+        x: float,
+        y: float,
+        s: str,
+        prop: FontProperties,
+        angle: float,
+        ismath: bool
+    ):
         # If the text field is empty, don't even try rendering it...
         if((s is None) or (s.strip() == "")):
             return
@@ -212,7 +251,13 @@ class _TransformRenderer(RendererBase):
         # checked above... (Above case causes error)
         super()._draw_text_as_path(gc, x, y, s, prop, angle, ismath)
 
-    def draw_gouraud_triangle(self, gc, points, colors, transform):
+    def draw_gouraud_triangle(
+        self,
+        gc: GraphicsContextBase,
+        points: np.ndarray,
+        colors: np.ndarray,
+        transform: Transform
+    ):
         # Pretty much identical to draw_path, transform the points and adjust
         # clip to the child axes bounding box.
         points = self._get_transfer_transform(transform).transform(points)
@@ -233,7 +278,14 @@ class _TransformRenderer(RendererBase):
                                               IdentityTransform())
 
     # Images prove to be especially messy to deal with...
-    def draw_image(self, gc, x, y, im, transform=None):
+    def draw_image(
+        self,
+        gc: GraphicsContextBase,
+        x: float,
+        y: float,
+        im: np.ndarray,
+        transform: Transform = None
+    ):
         mag = self.get_image_magnification()
         shift_data_transform = self._get_transfer_transform(
             IdentityTransform()

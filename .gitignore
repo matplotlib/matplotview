@@ -5,3 +5,6 @@ result_images
 .pytest_cache
 dist
 *.egg-info
+docs/_build/
+docs/api/generated
+docs/examples/
