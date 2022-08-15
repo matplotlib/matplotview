@@ -107,8 +107,8 @@ class ViewSpecification:
     A view specification, or a mutable dataclass containing configuration
     options for a view's "viewing" of a different axes.
 
-    Parameters:
-    -----------
+    Attributes
+    ----------
     image_interpolation: string
         Supported options are {interp_list}. The default value is
         '{image_interpolation}'. This determines the interpolation
