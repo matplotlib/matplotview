@@ -64,12 +64,14 @@ def view(
     Returns
     -------
     axes
-        The modified `~.axes.Axes` instance which is now a view. The modification occurs in-place.
+        The modified `~.axes.Axes` instance which is now a view.
+        The modification occurs in-place.
 
     See Also
     --------
     matplotview.stop_viewing: Delete or stop an already constructed view.
-    matplotview.inset_zoom_axes: Convenience method for creating inset axes that are views of the parent axes.
+    matplotview.inset_zoom_axes: Convenience method for creating inset axes
+                                 that are views of the parent axes.
     """
     view_obj = view_wrapper(type(axes)).from_axes(axes, render_depth)
     view_obj.view_specifications[axes_to_view] = ViewSpecification(
@@ -100,7 +102,8 @@ def stop_viewing(view: Axes, axes_of_viewing: Axes) -> Axes:
     Raises
     ------
     AttributeError
-        If the provided `axes_of_viewing` is not actually being viewed by the specified view.
+        If the provided `axes_of_viewing` is not actually being
+        viewed by the specified view.
 
     See Also
     --------
