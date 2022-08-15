@@ -14,9 +14,12 @@ pip install matplotview
 
 ## Examples
 
-See the documentation
+Examples can be found in the example gallery:
+    [https://matplotview.readthedocs.io/en/latest/examples/index.html](https://matplotview.readthedocs.io/en/latest/examples/index.html)
 
-## Documentation and Usage
+## Documentation
 
+Additional documentation can be found at the link below:
+    [https://matplotview.readthedocs.io/en/latest/](https://matplotview.readthedocs.io/en/latest/)
 
 
