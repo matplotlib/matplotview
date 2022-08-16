@@ -1,11 +1,10 @@
 import inspect
-from inspect import signature
 
 
 def dynamic_doc_string(**kwargs):
     def convert(func):
         default_vals = {
-            k: v.default for k, v in signature(func).parameters.items()
+            k: v.default for k, v in inspect.signature(func).parameters.items()
             if(v.default is not inspect.Parameter.empty)
         }
         default_vals.update(kwargs)

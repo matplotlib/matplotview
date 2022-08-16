@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.testing.decorators import check_figures_equal
-from matplotview import view, inset_zoom_axes
+from matplotview import view, inset_zoom_axes, stop_viewing
 
 
 @check_figures_equal(tol=6)
@@ -219,3 +219,24 @@ def test_double_view(fig_test, fig_ref):
         ax.set_aspect(1)
         ax.relim()
         ax.autoscale_view()
+
+
+@check_figures_equal()
+def test_stop_viewing(fig_test, fig_ref):
+    np.random.seed(1)
+    data = np.random.randint(0, 10, 10)
+
+    # Test case... Create a view and stop it...
+    ax1_test, ax2_test = fig_test.subplots(1, 2)
+
+    ax1_test.plot(data)
+    ax1_test.text(0.5, 0.5, "Hello")
+
+    view(ax2_test, ax1_test)
+    stop_viewing(ax2_test, ax1_test)
+
+    # Reference, just don't plot anything at all in the second axes...
+    ax1_ref, ax2_ref = fig_ref.subplots(1, 2)
+
+    ax1_ref.plot(data)
+    ax1_ref.text(0.5, 0.5, "Hello")
