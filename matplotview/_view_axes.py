@@ -3,7 +3,6 @@ import itertools
 from typing import Type, List, Optional, Any, Set, Dict, Union
 from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
-import matplotlib.docstring as docstring
 from matplotview._transform_renderer import _TransformRenderer
 from matplotlib.artist import Artist
 from matplotlib.backend_bases import RendererBase
@@ -166,7 +165,6 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
     if(issubclass(axes_class, Axes) and issubclass(axes_class, __ViewType)):
         return axes_class
 
-    @docstring.interpd
     class View(axes_class, __ViewType):
         """
         An axes which automatically displays elements of another axes. Does not
@@ -197,9 +195,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
 
             **kwargs
                 Other optional keyword arguments supported by the Axes
-                constructor this ViewAxes wraps:
-
-                %(Axes:kwdoc)s
+                constructor this ViewAxes wraps.
 
             Returns
             -------
