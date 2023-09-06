@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 def figure_to_image(figure):
     figure.canvas.draw()
-    img = np.frombuffer(figure.canvas.tostring_rgb(), dtype=np.uint8)
-    return img.reshape(figure.canvas.get_width_height()[::-1] + (3,))
+    img = np.frombuffer(figure.canvas.buffer_rgba(), dtype=np.uint8)
+    return img.reshape(figure.canvas.get_width_height()[::-1] + (4,))[..., :3]
 
 
 def matches_post_pickle(figure):
