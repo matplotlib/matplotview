@@ -18,8 +18,9 @@ def test_obj_comparison():
 
     assert view_class1 is view_class2
     assert view_class1 == view_class2
-    if(mpl_version >= (3, 7)):
-        # As of 3.7.0, the subplot class no longer exists, and is an alias to the Axes class...
+    if (mpl_version >= (3, 7)):
+        # As of 3.7.0, the subplot class no longer exists, and is an alias
+        # to the Axes class...
         assert view_class2 == view_class3
     else:
         assert view_class2 != view_class3

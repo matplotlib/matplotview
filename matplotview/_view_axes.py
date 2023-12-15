@@ -53,14 +53,14 @@ class _BoundRendererArtist:
 
         # If we are working with a 3D object, swap out it's axes with
         # this zoom axes (swapping out the 3d transform) and reproject it.
-        if(hasattr(self._artist, "do_3d_projection")):
+        if (hasattr(self._artist, "do_3d_projection")):
             self.do_3d_projection()
 
         # Check and see if the passed limiting box and extents of the
         # artist intersect, if not don't bother drawing this artist.
         # First 2 checks are a special case where we received a bad clip box.
         # (those can happen when we try to get the bounds of a map projection)
-        if(
+        if (
             self._clip_box.width == 0 or self._clip_box.height == 0 or
             Bbox.intersection(full_extents, self._clip_box) is not None
         ):
@@ -128,7 +128,7 @@ class ViewSpecification:
 
     def __post_init__(self):
         self.image_interpolation = str(self.image_interpolation)
-        if(self.filter_set is not None):
+        if (self.filter_set is not None):
             self.filter_set = set(self.filter_set)
         self.scale_lines = bool(self.scale_lines)
 
@@ -138,7 +138,6 @@ class __ViewType:
     PRIVATE: A simple identifier class for identifying view types, a view
     will inherit from the axes class it is wrapping and this type...
     """
-    ...
 
 
 # Cache classes so grabbing the same type twice leads to actually getting the
@@ -162,7 +161,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
         another axes contents...
     """
     # If the passed class is a view, simply return it.
-    if(issubclass(axes_class, Axes) and issubclass(axes_class, __ViewType)):
+    if (issubclass(axes_class, Axes) and issubclass(axes_class, __ViewType)):
         return axes_class
 
     class View(axes_class, __ViewType):
@@ -228,14 +227,14 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             child_list = super().get_children()
 
             def filter_check(artist, filter_set):
-                if(filter_set is None):
+                if (filter_set is None):
                     return True
                 return (
                     (artist not in filter_set)
                     and (type(artist) not in filter_set)
                 )
 
-            if(self.__renderer is not None):
+            if (self.__renderer is not None):
                 for ax, spec in self.view_specifications.items():
                     mock_renderer = _TransformRenderer(
                         self.__renderer, ax.transData, self.transData,
@@ -253,7 +252,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                         for a in itertools.chain(
                             ax._children,
                             ax.child_axes
-                        ) if(filter_check(a, spec.filter_set))
+                        ) if (filter_check(a, spec.filter_set))
                     ])
 
             return child_list
@@ -262,7 +261,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             # It is possible to have two axes which are views of each other
             # therefore we track the number of recursions and stop drawing
             # at a certain depth
-            if(self.figure._current_render_depth >= self.__max_render_depth):
+            if (self.figure._current_render_depth >= self.__max_render_depth):
                 return
             self.figure._current_render_depth += 1
             # Set the renderer, causing get_children to return the view's
@@ -281,7 +280,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             cls = type(self)
 
             args = tuple(
-                arg if(arg != cls) else cls.__bases__[0] for arg in args
+                arg if (arg != cls) else cls.__bases__[0] for arg in args
             )
 
             return (
@@ -318,7 +317,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 allow. Zero and negative values are invalid, and will raise a
                 ValueError.
             """
-            if(val <= 0):
+            if (val <= 0):
                 raise ValueError(f"Render depth must be positive, not {val}.")
             self.__max_render_depth = val
 
@@ -376,12 +375,12 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
                 If the provided axes to convert has an Axes type which does
                 not match the axes class this view type wraps.
             """
-            if(isinstance(axes, cls)):
-                if(render_depth is not None):
+            if (isinstance(axes, cls)):
+                if (render_depth is not None):
                     axes.set_max_render_depth(render_depth)
                 return axes
 
-            if(type(axes) != axes_class):
+            if (type(axes) is not axes_class):
                 raise TypeError(
                     f"Can't convert {type(axes).__name__} to {cls.__name__}"
                 )
@@ -389,7 +388,7 @@ def view_wrapper(axes_class: Type[Axes]) -> Type[Axes]:
             axes.__class__ = cls
             axes._init_vars(
                 DEFAULT_RENDER_DEPTH
-                if(render_depth is None)
+                if (render_depth is None)
                 else render_depth
             )
             return axes

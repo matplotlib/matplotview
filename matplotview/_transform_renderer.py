@@ -105,7 +105,7 @@ class _TransformRenderer(RendererBase):
             unit_box = transfer_transform.transform_bbox(unit_box)
             mult_factor = np.sqrt(unit_box.width * unit_box.height)
 
-            if(mult_factor == 0 or (not np.isfinite(mult_factor))):
+            if (mult_factor == 0 or (not np.isfinite(mult_factor))):
                 return new_gc
 
             new_gc.set_linewidth(gc.get_linewidth() * mult_factor)
@@ -218,18 +218,18 @@ class _TransformRenderer(RendererBase):
 
         # We check if the path intersects the axes box at all, if not don't
         # waste time drawing it.
-        if(not path.intersects_bbox(bbox, True)):
+        if (not path.intersects_bbox(bbox, True)):
             return
 
-        if(self.__scale_widths):
+        if (self.__scale_widths):
             gc = self._scale_gc(gc)
 
         # Change the clip to the sub-axes box
         gc.set_clip_rectangle(bbox)
-        if(not isinstance(self.__bounding_axes.patch, Rectangle)):
+        if (not isinstance(self.__bounding_axes.patch, Rectangle)):
             gc.set_clip_path(TransformedPatchPath(self.__bounding_axes.patch))
 
-        rgbFace = tuple(rgbFace) if(rgbFace is not None) else None
+        rgbFace = tuple(rgbFace) if (rgbFace is not None) else None
 
         self.__renderer.draw_path(gc, path, IdentityTransform(), rgbFace)
 
@@ -244,7 +244,7 @@ class _TransformRenderer(RendererBase):
         ismath: bool
     ):
         # If the text field is empty, don't even try rendering it...
-        if((s is None) or (s.strip() == "")):
+        if ((s is None) or (s.strip() == "")):
             return
 
         # Call the super class instance, which works for all cases except one
@@ -264,14 +264,14 @@ class _TransformRenderer(RendererBase):
         path = Path(points, closed=True)
         bbox = self._get_axes_display_box()
 
-        if(not path.intersects_bbox(bbox, True)):
+        if (not path.intersects_bbox(bbox, True)):
             return
 
-        if(self.__scale_widths):
+        if (self.__scale_widths):
             gc = self._scale_gc(gc)
 
         gc.set_clip_rectangle(bbox)
-        if(not isinstance(self.__bounding_axes.patch, Rectangle)):
+        if (not isinstance(self.__bounding_axes.patch, Rectangle)):
             gc.set_clip_path(TransformedPatchPath(self.__bounding_axes.patch))
 
         self.__renderer.draw_gouraud_triangle(gc, path.vertices, colors,
@@ -299,7 +299,7 @@ class _TransformRenderer(RendererBase):
         out_box = img_bbox_disp.transformed(shift_data_transform)
         clipped_out_box = Bbox.intersection(out_box, axes_bbox)
 
-        if(clipped_out_box is None):
+        if (clipped_out_box is None):
             return
 
         # We compute what the dimensions of the final output image within the
@@ -307,7 +307,7 @@ class _TransformRenderer(RendererBase):
         x, y, out_w, out_h = clipped_out_box.bounds
         out_w, out_h = int(np.ceil(out_w * mag)), int(np.ceil(out_h * mag))
 
-        if((out_w <= 0) or (out_h <= 0)):
+        if ((out_w <= 0) or (out_h <= 0)):
             return
 
         # We can now construct the transform which converts between the
@@ -330,16 +330,16 @@ class _TransformRenderer(RendererBase):
                         alpha=1)
         out_arr[:, :, 3] = trans_msk
 
-        if(self.__scale_widths):
+        if (self.__scale_widths):
             gc = self._scale_gc(gc)
 
         gc.set_clip_rectangle(clipped_out_box)
-        if(not isinstance(self.__bounding_axes.patch, Rectangle)):
+        if (not isinstance(self.__bounding_axes.patch, Rectangle)):
             gc.set_clip_path(TransformedPatchPath(self.__bounding_axes.patch))
 
         x, y = clipped_out_box.x0, clipped_out_box.y0
 
-        if(self.option_scale_image()):
+        if (self.option_scale_image()):
             self.__renderer.draw_image(gc, x, y, out_arr, None)
         else:
             self.__renderer.draw_image(gc, x, y, out_arr)
