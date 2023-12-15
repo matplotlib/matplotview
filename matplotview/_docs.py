@@ -5,7 +5,7 @@ def dynamic_doc_string(**kwargs):
     def convert(func):
         default_vals = {
             k: v.default for k, v in inspect.signature(func).parameters.items()
-            if(v.default is not inspect.Parameter.empty)
+            if (v.default is not inspect.Parameter.empty)
         }
         default_vals.update(kwargs)
         func.__doc__ = func.__doc__.format(**default_vals)
@@ -18,6 +18,6 @@ def dynamic_doc_string(**kwargs):
 def get_interpolation_list_str():
     from matplotlib.image import _interpd_
     return ", ".join([
-        f"'{k}'" if(i != len(_interpd_) - 1) else f"or '{k}'"
+        f"'{k}'" if (i != len(_interpd_) - 1) else f"or '{k}'"
         for i, k in enumerate(_interpd_)
     ])
