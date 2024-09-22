@@ -244,7 +244,7 @@ def test_stop_viewing(fig_test, fig_ref):
 
 @check_figures_equal()
 def test_log_line(fig_test, fig_ref):
-    data = [i for i in range(10)]
+    data = [i for i in range(1, 10)]
 
     # Test case... Create a view and stop it...
     ax1_test, ax2_test = fig_test.subplots(1, 2)
