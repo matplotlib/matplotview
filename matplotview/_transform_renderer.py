@@ -251,6 +251,76 @@ class _TransformRenderer(RendererBase):
         # checked above... (Above case causes error)
         super()._draw_text_as_path(gc, x, y, s, prop, angle, ismath)
 
+    def draw_markers(
+        self,
+        gc,
+        marker_path,
+        marker_trans,
+        path,
+        trans,
+        rgbFace = None,
+    ):
+        # If the markers need to be scaled accurately (such as in log scale), just use the fallback as each will need
+        # to be scaled separately.
+        if(self.__scale_widths):
+            super().draw_markers(gc, marker_path, marker_trans, path, trans, rgbFace)
+            return
+
+        # Otherwise we transform just the marker offsets (not the marker patch), so they stay the same size.
+        path = path.deepcopy()
+        path.vertices = self._get_transfer_transform(trans).transform(path.vertices)
+        bbox = self._get_axes_display_box()
+
+        # Change the clip to the sub-axes box
+        gc.set_clip_rectangle(bbox)
+        if (not isinstance(self.__bounding_axes.patch, Rectangle)):
+            gc.set_clip_path(TransformedPatchPath(self.__bounding_axes.patch))
+
+        rgbFace = tuple(rgbFace) if (rgbFace is not None) else None
+        self.__renderer.draw_markers(gc, marker_path, marker_trans, path, IdentityTransform(), rgbFace)
+
+    def draw_path_collection(
+        self,
+        gc,
+        master_transform,
+        paths,
+        all_transforms,
+        offsets,
+        offset_trans,
+        facecolors,
+        edgecolors,
+        linewidths,
+        linestyles,
+        antialiaseds,
+        urls,
+        offset_position,
+    ):
+        # If we want accurate scaling for each marker (such as in log scale), just use superclass implementation...
+        if(self.__scale_widths):
+            super().draw_path_collection(
+                gc, master_transform, paths, all_transforms, offsets, offset_trans, facecolors,
+                edgecolors, linewidths, linestyles, antialiaseds, urls, offset_position
+            )
+            return
+
+        # Otherwise we transform just the offsets, and pass them to the backend.
+        print(offsets)
+        if(np.any(np.isnan(offsets))):
+            raise ValueError("???")
+        offsets = self._get_transfer_transform(offset_trans).transform(offsets)
+        print(offsets)
+        bbox = self._get_axes_display_box()
+
+        # Change the clip to the sub-axes box
+        gc.set_clip_rectangle(bbox)
+        if (not isinstance(self.__bounding_axes.patch, Rectangle)):
+            gc.set_clip_path(TransformedPatchPath(self.__bounding_axes.patch))
+
+        self.__renderer.draw_path_collection(
+            gc, master_transform, paths, all_transforms, offsets, IdentityTransform(), facecolors,
+            edgecolors, linewidths, linestyles, antialiaseds, urls, None
+        )
+
     def draw_gouraud_triangle(
         self,
         gc: GraphicsContextBase,
