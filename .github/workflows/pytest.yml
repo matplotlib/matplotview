@@ -57,8 +57,17 @@ jobs:
           flake8 matplotview --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 matplotview --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with pytest
+        id: pytest
         run: |
           pytest
+
+      - name: Upload images on failure
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() && steps.pytest.conclusion == 'failure' }}
+        with:
+          name: test-result-images
+          retention-days: 1
+          path: result_images/
 
   test-windows:
 
@@ -82,5 +91,14 @@ jobs:
           pip install pytest
           pip install -r requirements.txt
       - name: Test with pytest
+        id: pytest
         run: |
           pytest
+
+      - name: Upload images on failure
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() && steps.pytest.conclusion == 'failure' }}
+        with:
+          name: test-result-images
+          retention-days: 1
+          path: result_images/
