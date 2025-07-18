@@ -1,5 +1,5 @@
 # matplotview
-#### A library for creating lightweight views of matplotlib axes.
+#### A small library for creating lightweight views of matplotlib axes.
 
 matplotview provides a simple interface for creating "views" of matplotlib
 axes, providing a simple way of displaying overviews and zoomed views of 
