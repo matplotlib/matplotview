@@ -1,5 +1,3 @@
-import sys
-
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.testing.decorators import check_figures_equal
