@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.testing.decorators import check_figures_equal
@@ -240,3 +242,77 @@ def test_stop_viewing(fig_test, fig_ref):
 
     ax1_ref.plot(data)
     ax1_ref.text(0.5, 0.5, "Hello")
+
+
+# On MacOS the results are off by an extremely tiny amount, can't even see in diff. It's close enough...
+@check_figures_equal(tol=0.02 if sys.platform.startswith("darwin") else 0)
+def test_log_line(fig_test, fig_ref):
+    data = [i for i in range(1, 10)]
+
+    # Test case... Create a view and stop it...
+    ax1_test, ax2_test = fig_test.subplots(1, 2)
+
+    ax1_test.set(xscale="log", yscale="log")
+    ax1_test.plot(data, "-o")
+
+    view(ax2_test, ax1_test, scale_lines=False)
+    ax2_test.set_xlim(-1, 10)
+    ax2_test.set_ylim(-1, 10)
+
+    # Reference, just don't plot anything at all in the second axes...
+    ax1_ref, ax2_ref = fig_ref.subplots(1, 2)
+
+    ax1_ref.set(xscale="log", yscale="log")
+    ax1_ref.plot(data, "-o")
+    ax2_ref.plot(data, "-o")
+    ax2_ref.set_xlim(-1, 10)
+    ax2_ref.set_ylim(-1, 10)
+
+
+@check_figures_equal()
+def test_log_scatter(fig_test, fig_ref):
+    data = [i for i in range(1, 11)]
+
+    # Test case... Create a view and stop it...
+    ax1_test, ax2_test = fig_test.subplots(1, 2)
+
+    ax1_test.set(xscale="log", yscale="log")
+    ax1_test.scatter(data, data)
+
+    view(ax2_test, ax1_test, scale_lines=False)
+    ax2_test.set_xlim(-5, 15)
+    ax2_test.set_ylim(-5, 15)
+
+    # Reference, just don't plot anything at all in the second axes...
+    ax1_ref, ax2_ref = fig_ref.subplots(1, 2)
+
+    ax1_ref.set(xscale="log", yscale="log")
+    ax1_ref.scatter(data, data)
+    ax2_ref.scatter(data, data)
+    ax2_ref.set_xlim(-5, 15)
+    ax2_ref.set_ylim(-5, 15)
+
+
+@check_figures_equal()
+def test_log_scatter_with_colors(fig_test, fig_ref):
+    data = [i for i in range(1, 11)]
+    colors = list("rgbrgbrgbr")
+
+    # Test case... Create a view and stop it...
+    ax1_test, ax2_test = fig_test.subplots(1, 2)
+
+    ax1_test.set(xscale="log", yscale="log")
+    ax1_test.scatter(data, data, color=colors)
+
+    view(ax2_test, ax1_test, scale_lines=False)
+    ax2_test.set_xlim(-5, 15)
+    ax2_test.set_ylim(-5, 15)
+
+    # Reference, just don't plot anything at all in the second axes...
+    ax1_ref, ax2_ref = fig_ref.subplots(1, 2)
+
+    ax1_ref.set(xscale="log", yscale="log")
+    ax1_ref.scatter(data, data, color=colors)
+    ax2_ref.scatter(data, data, color=colors)
+    ax2_ref.set_xlim(-5, 15)
+    ax2_ref.set_ylim(-5, 15)
