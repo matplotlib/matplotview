@@ -258,11 +258,11 @@ class _TransformRenderer(RendererBase):
         marker_trans,
         path,
         trans,
-        rgbFace = None,
+        rgbFace=None,
     ):
         # If the markers need to be scaled accurately (such as in log scale), just use the fallback as each will need
         # to be scaled separately.
-        if(self.__scale_widths):
+        if (self.__scale_widths):
             super().draw_markers(gc, marker_path, marker_trans, path, trans, rgbFace)
             return
 
@@ -296,7 +296,7 @@ class _TransformRenderer(RendererBase):
         offset_position,
     ):
         # If we want accurate scaling for each marker (such as in log scale), just use superclass implementation...
-        if(self.__scale_widths):
+        if (self.__scale_widths):
             super().draw_path_collection(
                 gc, master_transform, paths, all_transforms, offsets, offset_trans, facecolors,
                 edgecolors, linewidths, linestyles, antialiaseds, urls, offset_position
@@ -305,7 +305,7 @@ class _TransformRenderer(RendererBase):
 
         # Otherwise we transform just the offsets, and pass them to the backend.
         print(offsets)
-        if(np.any(np.isnan(offsets))):
+        if (np.any(np.isnan(offsets))):
             raise ValueError("???")
         offsets = self._get_transfer_transform(offset_trans).transform(offsets)
         print(offsets)
