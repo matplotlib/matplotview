@@ -22,7 +22,7 @@ jobs:
         python-version: ["3.11", "3.12", "3.13", "3.13t"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }}
@@ -77,7 +77,7 @@ jobs:
         python-version: ["3.11", "3.12", "3.13", "3.13t"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }}
