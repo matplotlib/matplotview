@@ -62,7 +62,7 @@ jobs:
           pytest
 
       - name: Upload images on failure
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: ${{ failure() && steps.pytest.conclusion == 'failure' }}
         with:
           name: test-result-images
@@ -96,7 +96,7 @@ jobs:
           pytest
 
       - name: Upload images on failure
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: ${{ failure() && steps.pytest.conclusion == 'failure' }}
         with:
           name: test-result-images
